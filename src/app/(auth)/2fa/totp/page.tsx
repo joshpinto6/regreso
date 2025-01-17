@@ -45,11 +45,13 @@ export default async function Page() {
         <Button asChild variant="outline">
           <Link href="/2fa/reset">Use recovery code</Link>
         </Button>
-        {user.registeredPasskey && (
-          <Button asChild variant="outline">
-            <Link href="/2fa/passkey">Use passkeys</Link>
-          </Button>
-        )}
+        <div>
+          {user.registeredPasskey && (
+            <Button asChild variant="outline">
+              <Link href="/2fa/passkey">Use passkeys</Link>
+            </Button>
+          )}
+        </div>
         {user.registeredSecurityKey && (
           <Button asChild variant="outline">
             <Link href="/2fa/security-key">Use security keys</Link>
