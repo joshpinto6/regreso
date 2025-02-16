@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { User } from "~/server/models";
 
 import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { users, workspaces } from "~/server/db/schema";
 import { decryptToString, encryptString } from "~/server/encryption";
 import { hashPassword } from "~/server/password";
 import { generateRandomRecoveryCode } from "~/server/utils";
@@ -42,7 +42,7 @@ export async function createUser(
   const recoveryCode = generateRandomRecoveryCode();
   const encryptedRecoveryCode = encryptString(recoveryCode);
 
-  const row = await db
+  const userRow = await db
     .insert(users)
     .values({
       email,
@@ -57,14 +57,32 @@ export async function createUser(
       recoveryCode: Buffer.from(encryptedRecoveryCode).toString("base64"),
     })
     .returning({ id: users.id });
-  if (!row || row.length === 0) {
+
+  if (!userRow || userRow.length === 0) {
     throw new Error("Unexpected error");
   }
+  const workspaceRow = await db
+    .insert(workspaces)
+    .values({
+      userId: userRow[0]!.id,
+      name: "My Workspace",
+      description: "This is your first workspace!",
+    })
+    .returning({ id: users.id });
+  if (!workspaceRow || workspaceRow.length === 0) {
+    throw new Error("Unexpected error (user created but workspace not)");
+  }
+  const workspaceId = workspaceRow[0]!.id;
+  await db
+    .update(users)
+    .set({ workspaceId })
+    .where(eq(users.id, userRow[0]!.id));
   const user: User = {
-    id: row[0]!.id,
+    id: userRow[0]!.id,
     email,
     displayName,
     bio: "Pelicans are epic",
+    workspaceId,
     name,
     googleId,
     githubId,
@@ -103,6 +121,7 @@ export async function getUserFromGoogleId(
     name: userProfile.name,
     displayName: userProfile.displayName,
     bio: userProfile.bio,
+    workspaceId: userProfile.workspaceId,
     emailVerified: userProfile.emailVerified,
     googleId: userProfile.googleId,
     githubId: userProfile.githubId,
@@ -146,6 +165,8 @@ export async function getUserFromGitHubId(
     name: userProfile.name,
     displayName: userProfile.displayName,
     bio: userProfile.bio,
+    workspaceId: userProfile.workspaceId,
+
     emailVerified: userProfile.emailVerified,
     googleId: userProfile.googleId,
     githubId: userProfile.githubId,
@@ -267,6 +288,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
     name: userResult.name,
     displayName: userResult.displayName,
     bio: userResult.bio,
+    workspaceId: userResult.workspaceId,
     googleId: userResult.googleId,
     githubId: userResult.githubId,
     emailVerified: userResult.emailVerified,

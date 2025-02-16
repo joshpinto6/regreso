@@ -6,6 +6,7 @@ export interface User {
   name: string;
   displayName: string;
   bio: string | null;
+  workspaceId: number | null;
   googleId?: string | null;
   githubId?: number | null;
   avatarUrl: string | null;
@@ -38,6 +39,7 @@ export interface Destination {
   tags?: { id: number; text: string }[];
   updatedAt: Date | null;
   lists?: List[];
+  workspaceId: number;
 }
 
 export interface List {
@@ -50,6 +52,7 @@ export interface List {
   size?: number;
   updatedAt?: Date | null;
   tags?: { id: number; text: string }[];
+  workspaceId: number;
 }
 
 const destinationTypes = ["location", "note", "file"] as const;
