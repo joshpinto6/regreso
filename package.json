@@ -112,7 +112,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.20.0",
     "drizzle-kit": "^0.30.4",
     "eslint": "^9.17.0",
