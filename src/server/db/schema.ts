@@ -30,6 +30,7 @@ export const users = createTable(
     recoveryCode: varchar("recovery_code").notNull(),
     avatarUrl: text("avatar_url"),
     bio: text("bio").default("Pelicans are epic"),
+    workspaceId: integer("workspace_id").references((): any => workspaces.id),
   },
   (user) => ({
     emailIndex: index("email_index").on(user.email),
@@ -116,7 +117,7 @@ export const destinations = createTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 256 }),
-    location: varchar("location", { length: 256 }).unique(),
+    location: varchar("location", { length: 256 }),
     type: varchar("type", { length: 256 }).notNull(),
     body: text("body"),
     userId: integer("user_id")
@@ -129,7 +130,9 @@ export const destinations = createTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
       .$onUpdate(() => new Date()),
-    workspaceId: integer("workspace_id").references(() => users.id),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id)
+      .notNull(),
   },
   (destination) => ({
     searchIndex: index("destination_search_index").using(
@@ -137,6 +140,7 @@ export const destinations = createTable(
       sql`setweight(to_tsvector('english', ${destination.name}), 'A') ||
           setweight(to_tsvector('english', ${destination.body}), 'B')`,
     ),
+    uniqueLocation: unique().on(destination.userId, destination.location),
   }),
 );
 
@@ -149,6 +153,10 @@ export const tags = createTable(
     userId: integer("user_id")
       .notNull()
       .references(() => users.id),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id)
+      .notNull()
+      .default(0),
   },
   (tag) => ({
     searchIndex: index("tag_search_index").using(
@@ -196,7 +204,10 @@ export const lists = createTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    workspaceId: integer("workspace_id").references(() => users.id),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id)
+      .notNull()
+      .default(0),
   },
   (list) => ({
     uniqueListName: unique().on(list.userId, list.name),

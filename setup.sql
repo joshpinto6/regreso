@@ -21,8 +21,8 @@ CREATE TABLE "regreso_destination" (
 	"user_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"workspace_id" integer,
-	CONSTRAINT "regreso_destination_location_unique" UNIQUE("location")
+	"workspace_id" integer NOT NULL,
+	CONSTRAINT "regreso_destination_user_id_location_unique" UNIQUE("user_id","location")
 );
 
 CREATE TABLE "regreso_email_verification_request" (
@@ -89,6 +89,7 @@ CREATE TABLE "regreso_tag" (
 	"shortcut" varchar(256),
 	"name" varchar(256) NOT NULL,
 	"user_id" integer NOT NULL,
+	"workspace_id" integer NOT NULL,
 	CONSTRAINT "regreso_tag_user_id_name_unique" UNIQUE("user_id","name"),
 	CONSTRAINT "regreso_tag_user_id_shortcut_unique" UNIQUE("user_id","shortcut")
 );
@@ -112,6 +113,7 @@ CREATE TABLE "regreso_user" (
 	"recovery_code" varchar NOT NULL,
 	"avatar_url" text,
 	"bio" text DEFAULT 'Pelicans are epic',
+	"workspace_id" integer,
 	CONSTRAINT "regreso_user_google_id_unique" UNIQUE("google_id"),
 	CONSTRAINT "regreso_user_github_id_unique" UNIQUE("github_id"),
 	CONSTRAINT "regreso_user_email_unique" UNIQUE("email"),
@@ -132,18 +134,20 @@ ALTER TABLE "regreso_destination_list" ADD CONSTRAINT "regreso_destination_list_
 ALTER TABLE "regreso_destination_tag" ADD CONSTRAINT "regreso_destination_tag_destination_id_regreso_destination_id_fk" FOREIGN KEY ("destination_id") REFERENCES "public"."regreso_destination"("id") ON DELETE cascade ON UPDATE cascade;
 ALTER TABLE "regreso_destination_tag" ADD CONSTRAINT "regreso_destination_tag_tag_id_regreso_tag_id_fk" FOREIGN KEY ("tag_id") REFERENCES "public"."regreso_tag"("id") ON DELETE cascade ON UPDATE cascade;
 ALTER TABLE "regreso_destination" ADD CONSTRAINT "regreso_destination_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
-ALTER TABLE "regreso_destination" ADD CONSTRAINT "regreso_destination_workspace_id_regreso_user_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "regreso_destination" ADD CONSTRAINT "regreso_destination_workspace_id_regreso_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_workspace"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_email_verification_request" ADD CONSTRAINT "regreso_email_verification_request_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_list_tag" ADD CONSTRAINT "regreso_list_tag_list_id_regreso_list_id_fk" FOREIGN KEY ("list_id") REFERENCES "public"."regreso_list"("id") ON DELETE cascade ON UPDATE cascade;
 ALTER TABLE "regreso_list_tag" ADD CONSTRAINT "regreso_list_tag_tag_id_regreso_tag_id_fk" FOREIGN KEY ("tag_id") REFERENCES "public"."regreso_tag"("id") ON DELETE cascade ON UPDATE cascade;
 ALTER TABLE "regreso_list" ADD CONSTRAINT "regreso_list_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
-ALTER TABLE "regreso_list" ADD CONSTRAINT "regreso_list_workspace_id_regreso_user_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "regreso_list" ADD CONSTRAINT "regreso_list_workspace_id_regreso_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_workspace"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_passkey_credential" ADD CONSTRAINT "regreso_passkey_credential_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_password_reset_session" ADD CONSTRAINT "regreso_password_reset_session_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_security_key_credential" ADD CONSTRAINT "regreso_security_key_credential_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_session" ADD CONSTRAINT "regreso_session_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_tag" ADD CONSTRAINT "regreso_tag_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "regreso_tag" ADD CONSTRAINT "regreso_tag_workspace_id_regreso_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_workspace"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_totp_credential" ADD CONSTRAINT "regreso_totp_credential_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "regreso_user" ADD CONSTRAINT "regreso_user_workspace_id_regreso_workspace_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."regreso_workspace"("id") ON DELETE no action ON UPDATE no action;
 ALTER TABLE "regreso_workspace" ADD CONSTRAINT "regreso_workspace_user_id_regreso_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."regreso_user"("id") ON DELETE no action ON UPDATE no action;
 CREATE INDEX "destination_search_index" ON "regreso_destination" USING gin ((setweight(to_tsvector('english', "name"), 'A') ||
           setweight(to_tsvector('english', "body"), 'B')));
