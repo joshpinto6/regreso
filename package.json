@@ -92,7 +92,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.2",
-    "react-markdown": "^9.0.3",
+    "react-markdown": "^10.0.0",
     "react-medium-image-zoom": "^5.2.13",
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
