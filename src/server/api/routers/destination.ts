@@ -50,6 +50,7 @@ export const destinationRouter = createTRPCRouter({
           userId: ctx.user.id,
           name: input.name,
           body: input.body,
+          workspaceId: ctx.user.workspaceId ?? 0,
           type: input.type,
           location: input.location,
         })
@@ -224,6 +225,7 @@ export const destinationRouter = createTRPCRouter({
         const returnDestinations = dests.map((dest) => {
           const destination = {
             id: dest.destination.id,
+            workspaceId: dest.destination.workspaceId,
             userId: dest.destination.userId,
             createdAt: dest.destination.createdAt,
             updatedAt: dest.destination.updatedAt,
