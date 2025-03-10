@@ -5,7 +5,9 @@ import {
   asc,
   desc,
   eq,
+  gte,
   inArray,
+  lte,
   or,
   sql,
 } from "drizzle-orm";
@@ -122,7 +124,7 @@ export const destinationRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{ items: Destination[]; count: number }> => {
-        const tagNames = input.tags ?? [];
+        const tagNames = input.tags?.filter((t) => t && t != "") ?? [];
         const listIds = input.lists ?? [];
         const dests = await ctx.db
           .select({
@@ -168,6 +170,16 @@ export const destinationRouter = createTRPCRouter({
                       setweight(to_tsvector('english', ${destinations.body}), 'B'))
                       @@ websearch_to_tsquery('english', ${input.searchString})`
                   : undefined,
+              ),
+              and(
+                ...[
+                  input.startDate
+                    ? gte(destinations.createdAt, input.startDate)
+                    : undefined,
+                  input.endDate
+                    ? lte(destinations.createdAt, input.endDate)
+                    : undefined,
+                ].filter(Boolean),
               ),
               input.location
                 ? sql`regexp_replace(${destinations.location}, '^https?://', '') SIMILAR TO ${input.location}`
