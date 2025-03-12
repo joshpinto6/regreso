@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
 import {
@@ -124,64 +124,66 @@ export const MacbookScroll = ({
   );
 };
 
-export const Lid = ({
-  scaleX,
-  scaleY,
-  rotate,
-  translate,
-  src,
-}: {
-  scaleX: MotionValue<number>;
-  scaleY: MotionValue<number>;
-  rotate: MotionValue<number>;
-  translate: MotionValue<number>;
-  src?: string;
-}) => {
-  return (
-    <div className="relative [perspective:800px]">
-      <div
-        style={{
-          transform: "perspective(800px) rotateX(-25deg) translateZ(0px)",
-          transformOrigin: "bottom",
-          transformStyle: "preserve-3d",
-        }}
-        className="relative h-[12rem] w-[32rem] rounded-2xl bg-[#010101] p-2"
-      >
+const Lid = memo(
+  ({
+    scaleX,
+    scaleY,
+    rotate,
+    translate,
+    src,
+  }: {
+    scaleX: MotionValue<number>;
+    scaleY: MotionValue<number>;
+    rotate: MotionValue<number>;
+    translate: MotionValue<number>;
+    src?: string;
+  }) => {
+    return (
+      <div className="relative [perspective:800px]">
         <div
           style={{
-            boxShadow: "0px 2px 0px 2px var(--neutral-900) inset",
+            transform: "perspective(800px) rotateX(-25deg) translateZ(0px)",
+            transformOrigin: "bottom",
+            transformStyle: "preserve-3d",
           }}
-          className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#010101]"
+          className="relative h-[12rem] w-[32rem] rounded-2xl bg-[#010101] p-2"
         >
-          <span className="text-white">
-            <Loader />
-          </span>
+          <div
+            style={{
+              boxShadow: "0px 2px 0px 2px var(--neutral-900) inset",
+            }}
+            className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#010101]"
+          >
+            <span className="text-white">
+              <Loader />
+            </span>
+          </div>
         </div>
+        <motion.div
+          style={{
+            scaleX: scaleX,
+            scaleY: scaleY,
+            rotateX: rotate,
+            translateY: translate,
+            transformStyle: "preserve-3d",
+            transformOrigin: "top",
+          }}
+          className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2"
+        >
+          <div className="absolute inset-0 rounded-lg bg-[#272729]" />
+          <Image
+            src={src!}
+            alt="aceternity logo"
+            width={729}
+            quality={50}
+            height={521}
+            className="absolute inset-0 h-full w-full rounded-lg object-cover object-center"
+          />
+        </motion.div>
       </div>
-      <motion.div
-        style={{
-          scaleX: scaleX,
-          scaleY: scaleY,
-          rotateX: rotate,
-          translateY: translate,
-          transformStyle: "preserve-3d",
-          transformOrigin: "top",
-        }}
-        className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2"
-      >
-        <div className="absolute inset-0 rounded-lg bg-[#272729]" />
-        <Image
-          src={src!}
-          alt="aceternity logo"
-          width={729}
-          quality={50}
-          height={521}
-          className="absolute inset-0 h-full w-full rounded-lg object-cover object-center"
-        />
-      </motion.div>
-    </div>
-  );
-};
+    );
+  },
+);
 
 export const Trackpad = () => {
   return (
@@ -193,8 +195,34 @@ export const Trackpad = () => {
     ></div>
   );
 };
+Lid.displayName = "Lid";
 
-export const Keypad = () => {
+const Keypad = memo(() => {
+  const memoizedRewind = useMemo(
+    () => <Rewind className="h-[6px] w-[6px]" />,
+    [],
+  );
+
+  const memoizedSquareChevronUp = useMemo(
+    () => <SquareChevronUp className="h-[6px] w-[6px]" />,
+    [],
+  );
+
+  const memoizedSearch = useMemo(
+    () => <Search className="h-[6px] w-[6px]" />,
+    [],
+  );
+
+  const memoizedCommand = useMemo(
+    () => <Command className="h-[6px] w-[6px]" />,
+    [],
+  );
+
+  const memoizedChevronRight = useMemo(
+    () => <ChevronRight className="h-[6px] w-[6px]" />,
+    [],
+  );
+
   return (
     <div className="mx-1 h-full rounded-md bg-[#050505] p-1">
       {/* First Row */}
@@ -219,7 +247,7 @@ export const Keypad = () => {
           <span className="mt-1 inline-block">F3</span>
         </KBtn>
         <KBtn>
-          <Search className="h-[6px] w-[6px]" />
+          {memoizedSearch}
           <span className="mt-1 inline-block">F4</span>
         </KBtn>
         <KBtn>
@@ -231,7 +259,7 @@ export const Keypad = () => {
           <span className="mt-1 inline-block">F6</span>
         </KBtn>
         <KBtn>
-          <Rewind className="h-[6px] w-[6px]" />
+          {memoizedRewind}
           <span className="mt-1 inline-block">F7</span>
         </KBtn>
         <KBtn>
@@ -247,7 +275,12 @@ export const Keypad = () => {
           <span className="mt-1 inline-block">F10</span>
         </KBtn>
         <KBtn>
-          <Volume1 className="h-[6px] w-[6px]" />
+          {useMemo(
+            () => (
+              <Volume1 className="h-[6px] w-[6px]" />
+            ),
+            [],
+          )}
           <span className="mt-1 inline-block">F11</span>
         </KBtn>
         <KBtn>
@@ -490,7 +523,7 @@ export const Keypad = () => {
         </KBtn>
         <KBtn className="" childrenClassName="h-full justify-between py-[4px]">
           <div className="flex w-full justify-end pr-1">
-            <SquareChevronUp className="h-[6px] w-[6px]" />
+            {memoizedSquareChevronUp}
           </div>
           <div className="flex w-full justify-start pl-1">
             <span className="block">control</span>
@@ -508,9 +541,7 @@ export const Keypad = () => {
           className="w-8"
           childrenClassName="h-full justify-between py-[4px]"
         >
-          <div className="flex w-full justify-end pr-1">
-            <Command className="h-[6px] w-[6px]" />
-          </div>
+          <div className="flex w-full justify-end pr-1">{memoizedCommand}</div>
           <div className="flex w-full justify-start pl-1">
             <span className="block">command</span>
           </div>
@@ -521,7 +552,7 @@ export const Keypad = () => {
           childrenClassName="h-full justify-between py-[4px]"
         >
           <div className="flex w-full justify-start pl-1">
-            <Command className="h-[6px] w-[6px]" />
+            {memoizedCommand}
           </div>
           <div className="flex w-full justify-start pl-1">
             <span className="block">command</span>
@@ -546,66 +577,70 @@ export const Keypad = () => {
             <KBtn className="h-3 w-6">
               <ChevronDown className="h-[6px] w-[6px]" />
             </KBtn>
-            <KBtn className="h-3 w-6">
-              <ChevronRight className="h-[6px] w-[6px]" />
-            </KBtn>
+            <KBtn className="h-3 w-6">{memoizedChevronRight}</KBtn>
           </div>
         </div>
       </Row>
     </div>
   );
-};
-export const KBtn = ({
-  className,
-  children,
-  childrenClassName,
-  backlit = true,
-}: {
-  className?: string;
-  children?: React.ReactNode;
-  childrenClassName?: string;
-  backlit?: boolean;
-}) => {
-  return (
-    <div
-      className={cn(
-        "rounded-[4px] p-[0.5px]",
-        backlit && "bg-white/[0.2] shadow-xl shadow-white",
-      )}
-    >
+});
+Keypad.displayName = "Keypad";
+
+const KBtn = memo(
+  ({
+    className,
+    children,
+    childrenClassName,
+    backlit = true,
+  }: {
+    className?: string;
+    children?: React.ReactNode;
+    childrenClassName?: string;
+    backlit?: boolean;
+  }) => {
+    return (
       <div
         className={cn(
-          "flex h-6 w-6 items-center justify-center rounded-[3.5px] bg-[#0A090D]",
-          className,
+          "rounded-[4px] p-[0.5px]",
+          backlit && "bg-white/[0.2] shadow-xl shadow-white",
         )}
-        style={{
-          boxShadow:
-            "0px -0.5px 2px 0 #0D0D0F inset, -0.5px 0px 2px 0 #0D0D0F inset",
-        }}
       >
         <div
           className={cn(
-            "flex w-full flex-col items-center justify-center text-[5px] text-neutral-200",
-            childrenClassName,
-            backlit && "text-white",
+            "flex h-6 w-6 items-center justify-center rounded-[3.5px] bg-[#0A090D]",
+            className,
           )}
+          style={{
+            boxShadow:
+              "0px -0.5px 2px 0 #0D0D0F inset, -0.5px 0px 2px 0 #0D0D0F inset",
+          }}
         >
-          {children}
+          <div
+            className={cn(
+              "flex w-full flex-col items-center justify-center text-[5px] text-neutral-200",
+              childrenClassName,
+              backlit && "text-white",
+            )}
+          >
+            {children}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
+KBtn.displayName = "KBtn";
 
-export const Row = ({ children }: { children: React.ReactNode }) => {
+const Row = memo(({ children }: { children: React.ReactNode }) => {
   return (
     <div className="mb-[2px] flex w-full flex-shrink-0 gap-[2px]">
       {children}
     </div>
   );
-};
+});
+Row.displayName = "Row";
 
-export const SpeakerGrid = () => {
+const SpeakerGrid = memo(() => {
   return (
     <div
       className="mt-2 flex h-40 gap-[2px] px-[0.5px]"
@@ -616,9 +651,10 @@ export const SpeakerGrid = () => {
       }}
     ></div>
   );
-};
+});
+SpeakerGrid.displayName = "SpeakerGrid";
 
-export const OptionKey = ({ className }: { className: string }) => {
+const OptionKey = memo(({ className }: { className: string }) => {
   return (
     <svg
       fill="none"
@@ -650,4 +686,6 @@ export const OptionKey = ({ className }: { className: string }) => {
       />
     </svg>
   );
-};
+});
+OptionKey.displayName = "OptionKey";
+export { Row, KBtn, OptionKey, SpeakerGrid, Keypad, Lid };

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
@@ -10,8 +10,15 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { LampContainer } from "~/components/ui/lamp";
 
-export default function Hero() {
+const Hero = memo(function Hero() {
   const [email, setEmail] = React.useState("");
+  const memoizedArrowRight = React.useMemo(
+    () => (
+      <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+    ),
+    [],
+  );
+
   return (
     <section className="pt-16 md:pt-16">
       {" "}
@@ -65,11 +72,13 @@ export default function Hero() {
           >
             <Link href={`/sign-up?email=${email}`}>
               Get Started
-              <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {memoizedArrowRight}
             </Link>
           </Button>
         </motion.div>
       </LampContainer>
     </section>
   );
-}
+});
+
+export default Hero;

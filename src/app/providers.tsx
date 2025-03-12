@@ -16,7 +16,10 @@ const NextThemesProvider = dynamic(
 );
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return React.useMemo(
+    () => <NextThemesProvider {...props}>{children}</NextThemesProvider>,
+    [children, props],
+  );
 }
 
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -29,5 +32,8 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 }
 
 export function CSPostHogProvider({ children }: { children: ReactNode }) {
-  return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
+  return React.useMemo(
+    () => <PostHogProvider client={posthog}>{children}</PostHogProvider>,
+    [children],
+  );
 }

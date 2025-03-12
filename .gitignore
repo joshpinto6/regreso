@@ -56,3 +56,6 @@ supabase
 
 # Blog posts (for now) 
 src/app/(knowledge)/(content)/posts
+
+# Million Lint
+.million

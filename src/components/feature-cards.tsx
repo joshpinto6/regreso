@@ -1,9 +1,9 @@
 "use client";
 
+import React, { memo, useMemo } from "react";
+
 import { Code, Database, Zap } from "lucide-react";
 import { motion } from "motion/react";
-
-// import { useInView } from "react-intersection-observer";
 
 type Feature = {
   icon: JSX.Element;
@@ -33,30 +33,22 @@ const features: Feature[] = [
 ];
 
 const FeatureCard = ({ feature }: { feature: Feature }) => {
-  // const [ref, inView] = useInView({
-  //   triggerOnce: true,
-  //   threshold: 0.1,
-  // });
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0 },
-  };
+  const initial = useMemo(() => ({ opacity: 0.5, y: 50 }), []);
+  const whileInView = useMemo(() => ({ opacity: 1, y: 0 }), []);
+  const transition = useMemo(
+    () => ({
+      delay: 0,
+      duration: 0.3,
+      ease: "easeInOut",
+    }),
+    [],
+  );
 
   return (
     <motion.div
-      initial={{ opacity: 0.5, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: 0,
-        duration: 0.3,
-        ease: "easeInOut",
-      }}
-      // ref={ref}
-      // initial="hidden"
-      // animate={inView ? "visible" : "hidden"}
-      variants={cardVariants}
-      // transition={{ duration: 0.5, delay: index * 0.2 }}
+      initial={initial}
+      whileInView={whileInView}
+      transition={transition}
       className="relative overflow-hidden rounded-lg bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-gray-800"
     >
       <div className="p-6">
@@ -73,7 +65,7 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
   );
 };
 
-export const FeatureCards = () => {
+const FeatureCards = memo(() => {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {features.map((feature, index) => (
@@ -81,4 +73,7 @@ export const FeatureCards = () => {
       ))}
     </div>
   );
-};
+});
+FeatureCards.displayName = "FeatureCards";
+
+export { FeatureCards };
