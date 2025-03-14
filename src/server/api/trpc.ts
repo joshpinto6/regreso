@@ -31,8 +31,13 @@ import { getCurrentSession, getSession } from "~/server/session";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const { session, user } = await getCurrentSession();
+export const createTRPCContext = async (opts: {
+  headers: Headers;
+  sesh?: string;
+}) => {
+  const { session, user } = opts.sesh
+    ? await getSession(opts.sesh)
+    : await getCurrentSession();
 
   return {
     db,

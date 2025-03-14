@@ -1,8 +1,11 @@
+import { use } from "react";
+
 import { relations, sql, type InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTableCreator,
   serial,
   text,
@@ -263,6 +266,37 @@ export const workspaces = createTable(
   }),
 );
 
+export const destinationFeeds = createTable(
+  "destination_feed",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    description: varchar("description", { length: 256 }),
+    emoji: varchar("emoji", { length: 256 }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    workspaceId: integer("workspace_id").references(() => workspaces.id),
+    visibility: varchar("visibility", { length: 256 }).notNull(),
+    jsonQuery: jsonb("json_query").notNull().$type<{
+      type?: string | null;
+      tags?: string[];
+      sortBy?: "createdAt" | "updatedAt" | "name";
+      order?: "ASC" | "DESC";
+      lists?: number[];
+      searchString?: string | null;
+      location?: string | null;
+      limit?: number;
+      offset?: number;
+      endDate?: Date | null;
+      startDate?: Date | null;
+    }>(),
+  },
+  (feed) => ({
+    uniqueFeedName: unique().on(feed.workspaceId, feed.name),
+  }),
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   passwordResetSessions: many(passwordResetSessions),
   securityKeyCredentials: many(securityKeyCredentials),
@@ -374,6 +408,30 @@ export const destinationListsRelations = relations(
     list: one(lists, {
       fields: [destinationLists.listId],
       references: [lists.id],
+    }),
+  }),
+);
+
+export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
+  user: one(users, {
+    fields: [workspaces.userId],
+    references: [users.id],
+  }),
+  lists: many(lists),
+  destinations: many(destinations),
+  feeds: many(destinationFeeds),
+}));
+
+export const destinationFeedsRelations = relations(
+  destinationFeeds,
+  ({ one, many }) => ({
+    workspace: one(workspaces, {
+      fields: [destinationFeeds.workspaceId],
+      references: [workspaces.id],
+    }),
+    user: one(users, {
+      fields: [destinationFeeds.userId],
+      references: [users.id],
     }),
   }),
 );
