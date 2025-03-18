@@ -21,6 +21,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Rss,
   Star,
   StarOff,
 } from "lucide-react";
@@ -603,7 +604,7 @@ export function ListPage(props: { id: string }) {
           ))}
         </div>
       ) : null}
-      <div className="font-muted flex flex-row space-x-2 text-sm italic">
+      <div className="font-muted align-center flex flex-row items-center space-x-2 text-sm italic">
         {data?.size && (
           <div className="flex flex-row space-x-2 pr-2">
             <p className="font-muted text-sm not-italic">
@@ -616,8 +617,28 @@ export function ListPage(props: { id: string }) {
         {(data?.updatedAt &&
           "Updated " +
             timeSince(data?.updatedAt ?? data?.createdAt ?? new Date()) +
-            " ago") ??
-          "Updated " + timeSince(data?.createdAt ?? new Date()) + " ago"}
+            " ago • ") ??
+          "Updated " + timeSince(data?.createdAt ?? new Date()) + " ago • "}
+        <Button
+          variant="link"
+          className="ml-2 p-0"
+          onClick={() => {
+            void navigator.clipboard.writeText(
+              window.location.hostname +
+                (window.location.port ? ":" + window.location.port : "") +
+                "/map/" +
+                props.id +
+                "/feed.xml",
+            );
+            toast({
+              title: "Copied Feed URL",
+              description: "The feed URL has been copied to your clipboard.",
+            });
+          }}
+        >
+          <Rss />
+          Copy Feed URL
+        </Button>
       </div>
 
       {data != undefined ? (

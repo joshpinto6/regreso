@@ -144,6 +144,8 @@ export const destinationSearchSchema = z.object({
   location: z.string().nullable().optional(),
   limit: z.number().max(30).optional().default(5),
   offset: z.number().optional().default(0),
+  endDate: z.date().nullable().optional(),
+  startDate: z.date().nullable().optional(),
 });
 
 export const listSearchSchema = z.object({
