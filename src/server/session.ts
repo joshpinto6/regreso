@@ -53,6 +53,7 @@ export async function validateSessionToken(
     displayName: result[0]!.user.displayName,
     bio: result[0]!.user.bio,
     name: result[0]!.user.name,
+    workspaceId: result[0]!.user.workspaceId,
     emailVerified: result[0]!.user.emailVerified,
     googleId: result[0]!.user.googleId,
     githubId: result[0]!.user.githubId,
