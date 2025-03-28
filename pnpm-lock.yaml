@@ -139,13 +139,13 @@ importers:
         version: 2.11.5
       '@trpc/client':
         specifier: ^11.0.0
-        version: 11.0.0(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(typescript@5.8.2)
+        version: 11.0.0(@trpc/server@11.0.0(typescript@5.8.2))(typescript@5.8.2)
       '@trpc/react-query':
         specifier: ^11.0.0
-        version: 11.0.0(@tanstack/react-query@5.69.0(react@18.3.1))(@trpc/client@11.0.0(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2)
+        version: 11.0.0(@tanstack/react-query@5.69.0(react@18.3.1))(@trpc/client@11.0.0(@trpc/server@11.0.0(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0(typescript@5.8.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2)
       '@trpc/server':
-        specifier: ^11.0.0-rc.666
-        version: 11.0.0-rc.808(typescript@5.8.2)
+        specifier: ^11.0.0
+        version: 11.0.0(typescript@5.8.2)
       '@uploadthing/react':
         specifier: ^7.1.5
         version: 7.3.0(next@15.2.4(@babel/core@7.26.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(uploadthing@7.6.0(h3@1.15.1)(next@15.2.4(@babel/core@7.26.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(tailwindcss@3.4.17))
@@ -247,7 +247,7 @@ importers:
         version: 1.0.7(tailwindcss@3.4.17)
       trpc-to-openapi:
         specifier: ^2.1.2
-        version: 2.1.3(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(zod-openapi@4.2.3(zod@3.24.2))(zod@3.24.2)
+        version: 2.1.3(@trpc/server@11.0.0(typescript@5.8.2))(zod-openapi@4.2.3(zod@3.24.2))(zod@3.24.2)
       uploadthing:
         specifier: ^7.6.0
         version: 7.6.0(h3@1.15.1)(next@15.2.4(@babel/core@7.26.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(tailwindcss@3.4.17)
@@ -2543,8 +2543,8 @@ packages:
       react-dom: '>=18.2.0'
       typescript: '>=5.7.2'
 
-  '@trpc/server@11.0.0-rc.808':
-    resolution: {integrity: sha512-pWDQGXqEQ/RpLJFpzHL8/XV53jvy7aUpcbgnckAZ23o9/pi7632HP2KWAMOvMwsU6mvwHU3/dKPhKIBbadmlBQ==}
+  '@trpc/server@11.0.0':
+    resolution: {integrity: sha512-xY9q/b/wR/tWGYTm5xmRjivkYD2EZZXmOKmHuNJRYZuLbieeNUsdfQRjJC409WB1pjKWInomhHwuA8bahZJ4lQ==}
     peerDependencies:
       typescript: '>=5.7.2'
 
@@ -7744,21 +7744,21 @@ snapshots:
       '@tiptap/extension-text-style': 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
       '@tiptap/pm': 2.11.5
 
-  '@trpc/client@11.0.0(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(typescript@5.8.2)':
+  '@trpc/client@11.0.0(@trpc/server@11.0.0(typescript@5.8.2))(typescript@5.8.2)':
     dependencies:
-      '@trpc/server': 11.0.0-rc.808(typescript@5.8.2)
+      '@trpc/server': 11.0.0(typescript@5.8.2)
       typescript: 5.8.2
 
-  '@trpc/react-query@11.0.0(@tanstack/react-query@5.69.0(react@18.3.1))(@trpc/client@11.0.0(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2)':
+  '@trpc/react-query@11.0.0(@tanstack/react-query@5.69.0(react@18.3.1))(@trpc/client@11.0.0(@trpc/server@11.0.0(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0(typescript@5.8.2))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.2)':
     dependencies:
       '@tanstack/react-query': 5.69.0(react@18.3.1)
-      '@trpc/client': 11.0.0(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(typescript@5.8.2)
-      '@trpc/server': 11.0.0-rc.808(typescript@5.8.2)
+      '@trpc/client': 11.0.0(@trpc/server@11.0.0(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server': 11.0.0(typescript@5.8.2)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       typescript: 5.8.2
 
-  '@trpc/server@11.0.0-rc.808(typescript@5.8.2)':
+  '@trpc/server@11.0.0(typescript@5.8.2)':
     dependencies:
       typescript: 5.8.2
 
@@ -11140,9 +11140,9 @@ snapshots:
 
   trough@2.2.0: {}
 
-  trpc-to-openapi@2.1.3(@trpc/server@11.0.0-rc.808(typescript@5.8.2))(zod-openapi@4.2.3(zod@3.24.2))(zod@3.24.2):
+  trpc-to-openapi@2.1.3(@trpc/server@11.0.0(typescript@5.8.2))(zod-openapi@4.2.3(zod@3.24.2))(zod@3.24.2):
     dependencies:
-      '@trpc/server': 11.0.0-rc.808(typescript@5.8.2)
+      '@trpc/server': 11.0.0(typescript@5.8.2)
       co-body: 6.2.0
       h3: 1.15.1
       openapi3-ts: 4.4.0
