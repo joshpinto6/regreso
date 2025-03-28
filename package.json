@@ -89,7 +89,7 @@
     "node-html-parser": "^7.0.1",
     "nodemailer": "^6.10.0",
     "postgres": "^3.4.4",
-    "posthog-js": "^1.233.1",
+    "posthog-js": "^1.234.1",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
