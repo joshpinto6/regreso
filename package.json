@@ -60,7 +60,7 @@
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/extension-placeholder": "^2.11.5",
     "@tiptap/extension-text-style": "^2.11.5",
-    "@tiptap/extension-typography": "^2.11.5",
+    "@tiptap/extension-typography": "^2.11.6",
     "@tiptap/extension-underline": "^2.11.5",
     "@tiptap/pm": "^2.11.5",
     "@tiptap/react": "^2.11.5",
