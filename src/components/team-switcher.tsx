@@ -22,7 +22,9 @@ import {
 
 export function TeamSwitcher({
   teams,
+  id,
 }: {
+  id?: string;
   teams: {
     name: string;
     logo: React.ElementType;
@@ -32,7 +34,7 @@ export function TeamSwitcher({
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
   return (
-    <SidebarMenu>
+    <SidebarMenu id={id}>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

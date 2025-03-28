@@ -81,7 +81,6 @@ function ProfilePicture({
 }
 
 export function NavUser({ user }: { user: User | null }) {
-  // const [selectedOptions, setSelectedOption] = useState<[]>([]);
   const { isMobile } = useSidebar();
   const [, action] = useActionState(logoutAction, initialState);
 

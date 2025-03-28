@@ -130,7 +130,7 @@ export function ListCard(props: List) {
           </p>
 
           <div className="mt-2 flex flex-wrap gap-2">
-            {props.size && (
+            {props.size != null && props.size != undefined && (
               <p className="font-muted text-sm">{props.size} destinations</p>
             )}
             <p>•</p>
@@ -394,7 +394,7 @@ export function RecentLists() {
                 </div>
               </Link>
 
-              <Button onClick={() => setOpen(true)} size="sm">
+              <Button id="create-map" onClick={() => setOpen(true)} size="sm">
                 <ListPlus />
                 Create Map
               </Button>

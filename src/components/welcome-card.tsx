@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { Binoculars, Rocket } from "lucide-react";
+import { useOnborda } from "onborda";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -22,6 +25,7 @@ export function WelcomeCard({
   }[];
   name: string | undefined;
 }) {
+  const { startOnborda } = useOnborda();
   return (
     <TiltCard>
       <Card>
@@ -34,14 +38,22 @@ export function WelcomeCard({
           </CardDescription>
         </CardHeader>
         <CardContent className="sm:px-3 xl:px-6">
-          <TeamSwitcher teams={teams} />
+          <TeamSwitcher id="team-switcher" teams={teams} />
 
           <div className="mt-4 flex gap-2">
-            <Button disabled size="sm" variant="outline">
-              <Rocket />
-              Setup Guide
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/guide">
+                <Rocket />
+                Setup Guide
+              </Link>
             </Button>
-            <Button disabled size="sm">
+            <Button
+              size="sm"
+              id="start-tour"
+              onClick={() => {
+                startOnborda("welcome-tour");
+              }}
+            >
               <Binoculars /> Start Tour
             </Button>
           </div>

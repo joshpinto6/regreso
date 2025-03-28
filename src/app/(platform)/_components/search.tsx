@@ -336,6 +336,7 @@ export function SearchForm({ searchType }: { searchType: "maps" | "pins" }) {
             />
             <Button
               type="submit"
+              id="search-button"
               className="w-full lg:w-1/4"
               disabled={isFetching || !form.formState.isDirty}
             >

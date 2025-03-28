@@ -514,7 +514,7 @@ export function CreateDestination() {
 
   return (
     <TiltCard>
-      <Card>
+      <Card id="create-destination">
         <CardHeader>
           <CardTitle className="flex items-center">
             <MapPinPlus className="mr-2 h-5 w-5" /> Create Destination
