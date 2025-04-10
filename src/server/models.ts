@@ -6,6 +6,7 @@ export interface User {
   name: string;
   displayName: string;
   bio: string | null;
+  workspaceId: number | null;
   googleId?: string | null;
   githubId?: number | null;
   avatarUrl: string | null;
@@ -38,6 +39,7 @@ export interface Destination {
   tags?: { id: number; text: string }[];
   updatedAt: Date | null;
   lists?: List[];
+  workspaceId: number;
 }
 
 export interface List {
@@ -50,6 +52,32 @@ export interface List {
   size?: number;
   updatedAt?: Date | null;
   tags?: { id: number; text: string }[];
+  workspaceId: number;
+}
+
+export interface Workspace {
+  id: number;
+  name: string;
+  description: string | null;
+  emoji: string | null;
+  userId: number;
+  createdAt: Date;
+  destinationCount?: number;
+  listCount?: number;
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  shortcut: string | null;
+  description: string | null;
+  color: string | null;
+  userId: number;
+  destinationCount?: number;
+  listCount?: number;
+  workspaceId: number | null;
+  createdAt: Date;
+  updatedAt: Date | null;
 }
 
 const destinationTypes = ["location", "note", "file"] as const;
@@ -73,20 +101,7 @@ export const destinationFormSchema = z.object({
     .nullable(),
   tags: z.array(z.object({ id: z.string(), text: z.string() })).min(0),
   attachments: z.array(z.string()),
-});
-
-export const destinationSchema = z.object({
-  id: z.number(),
-  userId: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date().nullable(),
-  tags: z.array(z.object({ id: z.number(), text: z.string() })).optional(),
-  type: z.string(),
-  name: z.string().nullable(),
-  location: z.string().nullable(),
-  body: z.string().nullable(),
-  attachments: z.array(z.any()).optional(),
-  workspaceId: z.number().nullable().optional(),
+  workspaceId: z.number().optional(),
 });
 
 export const listFormSchema = z.object({
@@ -105,6 +120,73 @@ export const listFormSchema = z.object({
     message: "The description must be less than 200 characters.",
   }),
   tags: z.array(z.object({ id: z.string(), text: z.string() })).min(0),
+  workspaceId: z.number().optional(),
+});
+
+export const workspaceFormSchema = z.object({
+  name: z
+    .string({
+      required_error: "Please enter a workspace name.",
+    })
+    .min(1, {
+      message: "The name must be at least 1 characters.",
+    })
+    .max(100, {
+      message: "The name must be less than 100 characters.",
+    }),
+  description: z.string().min(0).max(200, {
+    message: "The description must be less than 200 characters.",
+  }),
+  emoji: z.string().min(1).max(5, {
+    message: "The emoji must be 1 character.",
+  }),
+  newDefault: z.boolean().optional(),
+  workspaceId: z.number().optional(),
+});
+
+export const tagFormSchema = z.object({
+  name: z
+    .string({
+      required_error: "Please enter a tag name.",
+    })
+    .min(1, {
+      message: "The name must be at least 1 characters.",
+    })
+    .max(100, {
+      message: "The name must be less than 100 characters.",
+    }),
+  shortcut: z.string().min(1).max(10, {
+    message: "The shortcut must be less than 10 characters.",
+  }),
+  description: z
+    .string()
+    .min(0)
+    .max(200, {
+      message: "The description must be less than 200 characters.",
+    })
+    .optional(),
+  color: z
+    .string()
+    .min(0)
+    .max(7, {
+      message: "The color must be less than 7 characters.",
+    })
+    .optional(),
+  workspaceId: z.number(),
+});
+
+export const destinationSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date().nullable(),
+  tags: z.array(z.object({ id: z.number(), text: z.string() })).optional(),
+  type: z.string(),
+  name: z.string().nullable(),
+  location: z.string().nullable(),
+  body: z.string().nullable(),
+  attachments: z.array(z.any()).optional(),
+  workspaceId: z.number(),
 });
 
 export const listSchema = z.object({
@@ -116,8 +198,31 @@ export const listSchema = z.object({
   size: z.number().optional(),
   name: z.string(),
   emoji: z.string().nullable(),
-  workspaceId: z.number().nullable().optional(),
+  workspaceId: z.number(),
   description: z.string().nullable(),
+});
+
+export const workspaceSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  createdAt: z.date(),
+  name: z.string(),
+  description: z.string().nullable(),
+  emoji: z.string().nullable(),
+});
+
+export const tagSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date().nullable(),
+  name: z.string(),
+  shortcut: z.string().nullable(),
+  description: z.string().nullable(),
+  color: z.string().nullable(),
+  workspaceId: z.number().nullable(),
+  destinationCount: z.number().optional(),
+  listCount: z.number().optional(),
 });
 
 export const updateDestinationSchema = z.object({
@@ -130,6 +235,17 @@ export const updateListSchema = z.object({
   ...listFormSchema.partial().shape,
   newTags: z.array(z.string()).optional(),
   removedTags: z.array(z.string()).optional(),
+});
+
+export const updateWorkspaceSchema = z.object({
+  id: z.number(),
+  ...workspaceFormSchema.partial().shape,
+  newDefault: z.boolean().optional(),
+});
+
+export const updateTagSchema = z.object({
+  id: z.number(),
+  ...tagFormSchema.partial().shape,
 });
 
 const destinationSearchTypes = ["location", "note", "any"] as const;
@@ -153,5 +269,23 @@ export const listSearchSchema = z.object({
   searchString: z.string().nullable().optional(),
   onlyFavorites: z.boolean().optional(),
   limit: z.number().optional().default(5),
+  offset: z.number().optional().default(0),
+});
+
+export const workspaceSearchSchema = z.object({
+  searchString: z.string().nullable().optional(),
+  sortBy: z
+    .enum(["createdAt", "updatedAt", "destinationCount", "listCount"])
+    .optional(),
+  order: z.enum(["ASC", "DESC"]).optional(),
+  limit: z.number().max(30).optional().default(5),
+  offset: z.number().optional().default(0),
+});
+
+export const tagSearchSchema = z.object({
+  searchString: z.string().nullable().optional(),
+  sortBy: z.enum(["createdAt", "updatedAt", "destinationCount", "listCount"]),
+  order: z.enum(["ASC", "DESC"]).optional(),
+  limit: z.number().max(30).optional().default(5),
   offset: z.number().optional().default(0),
 });
