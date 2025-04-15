@@ -16,6 +16,9 @@ import { WelcomeCard } from "~/components/welcome-card";
 
 import "~/styles/tour.css";
 
+import { MasonryItem, MasonryRoot } from "~/components/ui/masonry";
+import { Skeleton } from "~/components/ui/skeleton";
+
 import {
   CreateDestination,
   RecentDestinations,
@@ -36,76 +39,87 @@ const DashboardHome: React.FC = (props: { user?: User }) => {
   return (
     <>
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="z-10 grid grid-cols-1 gap-4 p-4 xl:grid-cols-5">
-          <div className="col-span-1 xl:col-span-2">
-            <div className="rounded-xl bg-muted/50">
-              <motion.div
-                initial={{ opacity: 0.5, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-              >
-                <WelcomeCard
-                  teams={[
-                    {
-                      name: "My Crew",
-                      logo: Sailboat,
-                      plan: "Free",
-                    },
-                  ]}
-                  name={props.user?.displayName}
-                />
-              </motion.div>
-            </div>
-          </div>
-          <div className="col-span-1 xl:col-span-3">
-            <div className="rounded-xl bg-muted/50">
-              <motion.div
-                initial={{ opacity: 0.5, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-              >
-                <CreateDestination />
-              </motion.div>
-            </div>
-          </div>
-          <div className="z-50 col-span-1 xl:col-span-2">
-            <div className="rounded-xl bg-muted/50">
-              <motion.div
-                initial={{ opacity: 0.5, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-              >
-                <RecentDestinations dragEnd={dragEnd} setDragEnd={setDragEnd} />
-              </motion.div>
-            </div>
-          </div>
-          <div className="col-span-1 xl:col-span-3">
-            <div className="rounded-xl bg-muted/50">
-              <motion.div
-                initial={{ opacity: 0.5, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-              >
-                <RecentLists />
-              </motion.div>
-            </div>
-          </div>
+        <div className="z-10 p-4">
+          <MasonryRoot
+            className="w-full align-top align-text-top"
+            gap={12}
+            columnWidth={300}
+            linear
+            fallback={<Skeleton className="h-72 w-full" />}
+          >
+            <MasonryItem asChild>
+              <div className="rounded-xl bg-muted/50">
+                <motion.div
+                  initial={{ opacity: 0.5, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0,
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                >
+                  <WelcomeCard
+                    teams={[
+                      {
+                        name: "My Crew",
+                        logo: Sailboat,
+                        plan: "Free",
+                      },
+                    ]}
+                    name={props.user?.displayName}
+                  />
+                </motion.div>
+              </div>
+            </MasonryItem>
+            <MasonryItem asChild>
+              <div className="rounded-xl bg-muted/50">
+                <motion.div
+                  initial={{ opacity: 0.5, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0,
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                >
+                  <CreateDestination />
+                </motion.div>
+              </div>
+            </MasonryItem>
+            <MasonryItem asChild>
+              <div className="rounded-xl bg-muted/50">
+                <motion.div
+                  initial={{ opacity: 0.5, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0,
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                >
+                  <RecentDestinations
+                    dragEnd={dragEnd}
+                    setDragEnd={setDragEnd}
+                  />
+                </motion.div>
+              </div>
+            </MasonryItem>
+            <MasonryItem asChild>
+              <div className="rounded-xl bg-muted/50">
+                <motion.div
+                  initial={{ opacity: 0.5, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0,
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                >
+                  <RecentLists />
+                </motion.div>
+              </div>
+            </MasonryItem>
+          </MasonryRoot>
         </div>
       </DndContext>
     </>
