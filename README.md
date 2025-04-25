@@ -157,7 +157,7 @@ User Interface
 <a href="https://github.com/Aslam97/shadcn-minimal-tiptap/">Shadcn Minimal Tiptap</a> component
 </li>
 <li>
-<a href="https://emblor.jaleelbennett.com/introduction">Emblor</a> tag selections
+<a href="https://www.diceui.com/">DiceUI</a> tag input, masonry, scrollbox
 </li>
 <li>
 <a href="https://www.npmjs.com/package/react-day-picker">React Day Picker</a> calendar picker
