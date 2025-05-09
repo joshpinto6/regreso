@@ -139,19 +139,25 @@ export function SidebarLeft({ ...props }: ComponentProps<typeof Sidebar>) {
   const [mode, setMode] = useState<"fav" | "rec">("rec");
   const [oldMode, setOldMode] = useState<"fav" | "rec">("rec");
 
-  const { data: recentLists = { items: [], count: 0 }, refetch } =
+  const { data: recentLists = { items: [], count: 0 }, refetch: refetchLists } =
     api.list.getMany.useQuery({
       limit: 3,
       order: "DESC",
       tags: mode === "fav" ? ["favorite maps"] : undefined,
     });
 
+  const { data: recentWorkspaces = { items: [], count: 0 } } =
+    api.workspace.getMany.useQuery({
+      limit: 3,
+      order: "DESC",
+    });
+
   useEffect(() => {
     if (mode !== oldMode) {
-      void refetch();
+      void refetchLists();
       setOldMode(mode);
     }
-  }, [mode, refetch, oldMode, setOldMode]);
+  }, [mode, refetchLists, oldMode, setOldMode]);
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
@@ -161,7 +167,7 @@ export function SidebarLeft({ ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavLists
           mode={mode}
-          refetch={refetch}
+          refetch={refetchLists}
           setMode={setMode}
           lists={recentLists.items.map((l: List) => {
             return {
@@ -176,8 +182,16 @@ export function SidebarLeft({ ...props }: ComponentProps<typeof Sidebar>) {
         />
       </SidebarContent>
       <SidebarFooter>
-        <NavWorkspaces workspaces={data.workspaces} />
-
+        <NavWorkspaces
+          workspaces={recentWorkspaces.items.map((w) => {
+            return {
+              id: w.id,
+              name: w.name,
+              emoji: w.emoji,
+              pages: [],
+            };
+          })}
+        />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarFooter>
       <SidebarRail />

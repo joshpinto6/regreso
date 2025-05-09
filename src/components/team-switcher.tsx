@@ -23,6 +23,7 @@ import {
 export function TeamSwitcher({
   teams,
   id,
+  disabled,
 }: {
   id?: string;
   teams: {
@@ -30,6 +31,7 @@ export function TeamSwitcher({
     logo: React.ElementType;
     plan: string;
   }[];
+  disabled?: boolean;
 }) {
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
@@ -37,7 +39,7 @@ export function TeamSwitcher({
     <SidebarMenu id={id}>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger disabled={disabled} asChild>
             <SidebarMenuButton className="w-fit px-1.5">
               <div className="flex aspect-square size-5 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                 {activeTeam && <activeTeam.logo className="size-3" />}

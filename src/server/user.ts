@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { User } from "~/server/models";
 
 import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { destinations, users, workspaces } from "~/server/db/schema";
 import { decryptToString, encryptString } from "~/server/encryption";
 import { hashPassword } from "~/server/password";
 import { generateRandomRecoveryCode } from "~/server/utils";
@@ -30,6 +30,29 @@ export function verifyUsernameInput(username: string): boolean {
   );
 }
 
+export function verifyDisplayNameInput(displayName: string): boolean {
+  const reservedDisplayNames = [
+    "admin",
+    "administrator",
+    "mod",
+    "moderator",
+    "staff",
+    "owner",
+    "developer",
+    "dev",
+    "support",
+    "help",
+    "contact",
+    "anonymous",
+  ];
+  return (
+    displayName.length > 3 &&
+    displayName.length < 32 &&
+    displayName.trim() === displayName &&
+    !reservedDisplayNames.includes(displayName)
+  );
+}
+
 export async function createUser(
   email: string,
   displayName: string,
@@ -42,7 +65,14 @@ export async function createUser(
   const recoveryCode = generateRandomRecoveryCode();
   const encryptedRecoveryCode = encryptString(recoveryCode);
 
-  const row = await db
+  if (!verifyUsernameInput(name)) {
+    throw new Error("Invalid username");
+  }
+
+  if (!verifyDisplayNameInput(displayName)) {
+    throw new Error("Invalid display name");
+  }
+  const userRow = await db
     .insert(users)
     .values({
       email,
@@ -57,14 +87,44 @@ export async function createUser(
       recoveryCode: Buffer.from(encryptedRecoveryCode).toString("base64"),
     })
     .returning({ id: users.id });
-  if (!row || row.length === 0) {
+
+  if (!userRow || userRow.length === 0) {
     throw new Error("Unexpected error");
   }
+  const workspaceRow = await db
+    .insert(workspaces)
+    .values({
+      userId: userRow[0]!.id,
+      name: "Default Workspace",
+      emoji: "🧰",
+      description:
+        "This is your first workspace. Do something awesome with it!",
+    })
+    .returning({ id: users.id });
+  if (!workspaceRow || workspaceRow.length === 0) {
+    throw new Error("Unexpected error (user created but workspace not)");
+  }
+  const workspaceId = workspaceRow[0]!.id;
+  await db.insert(destinations).values({
+    userId: userRow[0]!.id,
+    workspaceId,
+    body: "",
+    name: "Regreso | find your way back",
+    type: "location",
+    location: "https://regreso.netlify.app",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  await db
+    .update(users)
+    .set({ workspaceId })
+    .where(eq(users.id, userRow[0]!.id));
   const user: User = {
-    id: row[0]!.id,
+    id: userRow[0]!.id,
     email,
     displayName,
     bio: "Pelicans are epic",
+    workspaceId,
     name,
     googleId,
     githubId,
@@ -103,6 +163,7 @@ export async function getUserFromGoogleId(
     name: userProfile.name,
     displayName: userProfile.displayName,
     bio: userProfile.bio,
+    workspaceId: userProfile.workspaceId,
     emailVerified: userProfile.emailVerified,
     googleId: userProfile.googleId,
     githubId: userProfile.githubId,
@@ -146,6 +207,8 @@ export async function getUserFromGitHubId(
     name: userProfile.name,
     displayName: userProfile.displayName,
     bio: userProfile.bio,
+    workspaceId: userProfile.workspaceId,
+
     emailVerified: userProfile.emailVerified,
     googleId: userProfile.googleId,
     githubId: userProfile.githubId,
@@ -267,6 +330,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
     name: userResult.name,
     displayName: userResult.displayName,
     bio: userResult.bio,
+    workspaceId: userResult.workspaceId,
     googleId: userResult.googleId,
     githubId: userResult.githubId,
     emailVerified: userResult.emailVerified,

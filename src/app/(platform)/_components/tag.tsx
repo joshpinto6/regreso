@@ -10,33 +10,28 @@ import {
   type Active,
   type Over,
 } from "@dnd-kit/core";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type TRPCClientErrorLike } from "@trpc/client";
 import { type UseTRPCMutationResult } from "@trpc/react-query/shared";
 import { api } from "~/trpc/react";
-import { TagInput, type Tag } from "emblor";
 import {
   ArrowRight,
   GalleryVerticalEnd,
-  ListPlus,
   Loader2,
-  Map,
   Pencil,
   Plus,
   RefreshCw,
-  Star,
-  StarOff,
+  Tag as TagIcon,
+  Tags,
 } from "lucide-react";
 import { motion, useAnimation } from "motion/react";
 import { useForm } from "react-hook-form";
 import { type z } from "zod";
 import {
-  listFormSchema,
+  tagFormSchema,
   type Destination,
-  type List,
-  type updateListSchema,
+  type Tag,
+  type updateTagSchema,
   type User,
   type Workspace,
 } from "~/server/models";
@@ -65,6 +60,7 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import { GradientPicker } from "~/components/ui/gradient-picker";
 import { Input } from "~/components/ui/input";
 import {
   Pagination,
@@ -90,6 +86,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
 import {
   Tooltip,
@@ -100,10 +97,42 @@ import { toast } from "~/components/hooks/use-toast";
 import { TiltCard } from "~/components/tilt-card";
 
 import { DestinationCard } from "./destination";
+import { ListCard } from "./list";
 
 const getRandomDelay = () => -(Math.random() * 0.7 + 0.05);
-
 const randomDuration = () => Math.random() * 0.07 + 0.23;
+
+function getContrastTextColor(color: string) {
+  const gradientMatch = /(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))/.exec(color);
+  const baseColor = (gradientMatch ? gradientMatch[1] : color) ?? "#ffffff";
+
+  const hex = baseColor.replace("#", "").trim();
+
+  let r = 255,
+    g = 255,
+    b = 255;
+
+  if (baseColor.startsWith("rgb")) {
+    const rgbMatch = /rgba?\(([^)]+)\)/.exec(baseColor);
+    if (rgbMatch?.[1]) {
+      const [rr, gg, bb] = rgbMatch[1].split(",").map(Number);
+      r = rr ?? 255;
+      g = gg ?? 255;
+      b = bb ?? 255;
+    }
+  } else if (hex && hex.length === 3) {
+    r = hex[0] ? parseInt(hex[0] + hex[0], 16) : 255;
+    g = hex[1] ? parseInt(hex[1] + hex[1], 16) : 255;
+    b = hex[2] ? parseInt(hex[2] + hex[2], 16) : 255;
+  } else if (hex && hex.length === 6) {
+    r = parseInt(hex.slice(0, 2), 16);
+    g = parseInt(hex.slice(2, 4), 16);
+    b = parseInt(hex.slice(4, 6), 16);
+  }
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#000000" : "#ffffff";
+}
 
 const variants = {
   start: (i: number) => ({
@@ -119,210 +148,66 @@ const variants = {
   },
 };
 
-export function ListCard(
-  props: List & {
-    setDragEnd?: React.Dispatch<
-      React.SetStateAction<{ over: Over; active: Active } | null>
-    >;
-    dragEnd?: { over: Over | null; active: Active | null };
-  },
-) {
-  const controls = useAnimation();
-
-  const utils = api.useUtils();
-
-  const addToWorkspace = api.list.update.useMutation({
-    onSuccess: async () => {
-      await utils.destination.invalidate();
-      toast({
-        title: "List added to workspace",
-        description: "Destination has been added to the selected workspace.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to add list to workspace",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const { isOver, setNodeRef: setNodeDropRef } = useDroppable({
-    id: props.id,
-  });
-  const { dragEnd, setDragEnd, id } = props;
-  useEffect(() => {
-    if (
-      dragEnd &&
-      setDragEnd &&
-      dragEnd.over &&
-      dragEnd.active &&
-      dragEnd.active.id == id
-    ) {
-      addToWorkspace.mutate({
-        id,
-        workspaceId:
-          typeof dragEnd.over.id === "number"
-            ? dragEnd.over.id
-            : parseInt(String(dragEnd.over.id)),
-      });
-      setDragEnd(null);
-    }
-  }, [dragEnd, setDragEnd, addToWorkspace, id]);
-  const {
-    attributes,
-    listeners,
-    transform,
-    setNodeRef: setNodeDragRef,
-  } = useDraggable({
-    id: props.id,
-  });
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-  useEffect(() => {
-    if (isOver) {
-      void controls.start("start");
-    } else {
-      controls.stop();
-      controls.set("reset");
-    }
-  }, [isOver, controls]);
-
-  return (
-    <motion.div custom={1} variants={variants} animate={controls}>
-      <Card ref={setNodeDragRef} style={style} {...listeners} {...attributes}>
-        <div ref={setNodeDropRef}>
-          <CardHeader className="px-3 pb-2 pt-4 text-sm leading-tight">
-            <CardTitle className="truncate">
-              <Link href={`/map/${props.id}`}>
-                <span className="mr-2 leading-tight">
-                  {props?.emoji ?? "❔"}
-                </span>
-                {props.name ?? "Unnamed Map"}
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-3 pb-3 pt-0 text-sm">
-            <p className="text-muted-foreground">
-              {props.description ?? "No description provided."}
-            </p>
-
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <Tooltip>
-                <TooltipTrigger>
-                  {(props.updatedAt &&
-                    "Updated " + timeSince(props.updatedAt) + " ago") ??
-                    "Created " + timeSince(props.createdAt) + " ago"}
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {props.updatedAt?.toISOString() ??
-                      props.createdAt.toISOString()}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-
-              <p>•</p>
-
-              {props.size != null && props.size != undefined && (
-                <p className="font-muted mr-0.5 text-sm">
-                  {props.size} destination{props.size == 1 ? null : "s"}
-                </p>
-              )}
-
-              {props.tags && props.tags.length > 0
-                ? [...props.tags]
-                    .sort((a, b) => a.text.length - b.text.length)
-                    .map((tag) => (
-                      <Link href={`/tag/${tag.id}`} key={tag.id}>
-                        <Badge variant="secondary">{tag.text}</Badge>
-                      </Link>
-                    ))
-                : null}
-              <Link href={`/box/${props.workspace.id}`}>
-                <Badge variant="outline">
-                  {(props.workspace.emoji ?? "❔") + " " + props.workspace.name}
-                </Badge>
-              </Link>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-    </motion.div>
-  );
-}
-
-type ListFormProps =
+type TagFormProps =
   | {
-      listMutation: (callback?: () => void) => UseTRPCMutationResult<
+      tagMutation: (callback?: () => void) => UseTRPCMutationResult<
         { success: boolean },
         TRPCClientErrorLike<{
-          input: z.infer<typeof updateListSchema>;
+          input: z.infer<typeof updateTagSchema>;
           output: { success: boolean };
           transformer: true;
           errorShape: { message: string };
         }>,
-        z.infer<typeof updateListSchema>,
+        z.infer<typeof updateTagSchema>,
         unknown
       >;
       update: true;
       updateId: number;
-      defaultValues?: z.infer<typeof listFormSchema>;
+      defaultValues?: z.infer<typeof tagFormSchema>;
     }
   | {
-      listMutation: (callback?: () => void) => UseTRPCMutationResult<
+      tagMutation: (callback?: () => void) => UseTRPCMutationResult<
         { success: boolean },
         TRPCClientErrorLike<{
-          input: z.infer<typeof updateListSchema>;
+          input: z.infer<typeof updateTagSchema>;
           output: { success: boolean };
           transformer: true;
           errorShape: { message: string };
         }>,
-        z.infer<typeof listFormSchema>,
+        z.infer<typeof tagFormSchema>,
         unknown
       >;
       update: false;
-      defaultValues?: z.infer<typeof listFormSchema>;
+      defaultValues?: z.infer<typeof tagFormSchema>;
     };
 
-export function ListForm(
-  props: ListFormProps & {
+export function TagForm(
+  props: TagFormProps & {
     workspace?: Workspace;
     user?: User;
     workspaces?: Workspace[];
   },
 ) {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
-  const form = useForm<z.infer<typeof listFormSchema>>({
-    resolver: zodResolver(listFormSchema),
+  const form = useForm<z.infer<typeof tagFormSchema>>({
+    resolver: zodResolver(tagFormSchema),
     defaultValues: {
       name: props.defaultValues?.name ?? "",
+      shortcut: props.defaultValues?.shortcut ?? "",
+      color: props.defaultValues?.color ?? undefined,
       description: props.defaultValues?.description ?? "",
-      tags: props.defaultValues?.tags ?? [],
-      emoji: props.defaultValues?.emoji ?? "🗺️",
       workspaceId:
         props.defaultValues?.workspaceId ??
         props.workspace?.id ??
         props.user?.workspaceId ??
         undefined,
-    } as z.infer<typeof listFormSchema>,
+    } as z.infer<typeof tagFormSchema>,
   });
 
-  useEffect(() => {
-    setTags(props.defaultValues?.tags ?? []);
-  }, [props.defaultValues?.tags]);
-
-  const submitMutation = props.listMutation(() => {
+  const submitMutation = props.tagMutation(() => {
     form.reset();
-    setTags([]);
   });
 
-  function onSubmit(data: z.infer<typeof listFormSchema>) {
+  function onSubmit(data: z.infer<typeof tagFormSchema>) {
     if (props.update) {
       if (!props.updateId) {
         return;
@@ -339,30 +224,18 @@ export function ListForm(
         <div className="flex w-full flex-row items-end gap-4">
           <FormField
             control={form.control}
-            name="emoji"
-            render={() => (
+            name="color"
+            render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Emoji</FormLabel>
+                <FormLabel>Color</FormLabel>
                 <FormControl>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline">
-                        {form.watch("emoji") != undefined &&
-                        form.watch("emoji").length > 0
-                          ? form.watch("emoji")
-                          : "❔"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0">
-                      <Picker
-                        data={data}
-                        value={form.watch("emoji")}
-                        onEmojiSelect={(emoji: { native: string }) => {
-                          form.setValue("emoji", emoji.native);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <GradientPicker
+                    className="w-full truncate"
+                    background={field.value ?? ""}
+                    setBackground={(newVal) => {
+                      field.onChange(newVal);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -375,13 +248,29 @@ export function ListForm(
               <FormItem className="grow">
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Pelican Resources" {...field} />
+                  <Input placeholder="geese resources" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+        <FormField
+          control={form.control}
+          name="shortcut"
+          render={({ field }) => (
+            <FormItem className="grow">
+              <FormLabel>Shortcut</FormLabel>
+              <FormControl>
+                <Input placeholder="geese" {...field} />
+              </FormControl>
+              <FormMessage />
+              <FormDescription>
+                This is the tag shortcut, used to quickly apply this tag.
+              </FormDescription>
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -391,41 +280,11 @@ export function ListForm(
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="A list of resources for raising pelicans at home."
+                  placeholder="Resources about geese, not pelicans"
                   className="resize-none"
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="tags"
-          render={({ field }) => (
-            <FormItem className="flex flex-col items-start">
-              <FormLabel className="text-left">Tags</FormLabel>
-              <FormControl>
-                <TagInput
-                  {...field}
-                  placeholder="Enter some tags..."
-                  tags={tags}
-                  className="sm:min-w-[450px]"
-                  setTags={(newTags) => {
-                    setTags(newTags);
-                    form.setValue("tags", newTags as [Tag, ...Tag[]]);
-                  }}
-                  styleClasses={{
-                    input: "w-full sm:max-w-[350px]",
-                  }}
-                  activeTagIndex={activeTagIndex}
-                  setActiveTagIndex={setActiveTagIndex}
-                />
-              </FormControl>
-              <FormDescription>
-                All maps added to this map will be searchable using these tags.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -482,7 +341,7 @@ export function ListForm(
                   <Pencil />
                 )}
 
-                {submitMutation.isPending ? "Updating Map..." : "Update Map"}
+                {submitMutation.isPending ? "Updating Tag..." : "Update Tag"}
               </>
             ) : (
               <>
@@ -492,7 +351,7 @@ export function ListForm(
                   <Plus />
                 )}
 
-                {submitMutation.isPending ? "Creating Map..." : "Create Map"}
+                {submitMutation.isPending ? "Creating Tag..." : "Create Tag"}
               </>
             )}
           </Button>
@@ -502,7 +361,155 @@ export function ListForm(
   );
 }
 
-export function RecentLists({
+export function TagCard(
+  props: Tag & {
+    setDragEnd?: React.Dispatch<
+      React.SetStateAction<{ over: Over; active: Active } | null>
+    >;
+    dragEnd?: { over: Over | null; active: Active | null };
+  },
+) {
+  const controls = useAnimation();
+
+  const utils = api.useUtils();
+
+  const addToWorkspace = api.tag.update.useMutation({
+    onSuccess: async () => {
+      await utils.destination.invalidate();
+      toast({
+        title: "Tag added to workspace",
+        description: "Tag has been added to the selected workspace.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to add tag to workspace",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { isOver, setNodeRef: setNodeDropRef } = useDroppable({
+    id: props.id,
+  });
+  const { dragEnd, setDragEnd, id } = props;
+  useEffect(() => {
+    if (
+      dragEnd &&
+      setDragEnd &&
+      dragEnd.over &&
+      dragEnd.active &&
+      dragEnd.active.id == id
+    ) {
+      addToWorkspace.mutate({
+        id,
+        workspaceId:
+          typeof dragEnd.over.id === "number"
+            ? dragEnd.over.id
+            : parseInt(String(dragEnd.over.id)),
+      });
+      setDragEnd(null);
+    }
+  }, [dragEnd, setDragEnd, addToWorkspace, id]);
+  const {
+    attributes,
+    listeners,
+    transform,
+    setNodeRef: setNodeDragRef,
+  } = useDraggable({
+    id: props.id,
+  });
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+  useEffect(() => {
+    if (isOver) {
+      void controls.start("start");
+    } else {
+      controls.stop();
+      controls.set("reset");
+    }
+  }, [isOver, controls]);
+
+  return (
+    <motion.div custom={1} variants={variants} animate={controls}>
+      <Card ref={setNodeDragRef} style={style} {...listeners} {...attributes}>
+        <div ref={setNodeDropRef}>
+          <CardHeader className="flex flex-row items-end px-3 pb-2 pt-4 text-sm leading-tight">
+            <div
+              className="circle mr-1.5 flex h-4 w-4 overflow-hidden rounded-full"
+              style={{ background: props.color ?? "hsl(var(--secondary))" }}
+            >
+              <div
+                className="circle m-auto h-1.5 w-1.5 overflow-hidden rounded-full"
+                style={{
+                  background:
+                    getContrastTextColor(props?.color ?? "#ffffff") ??
+                    "hsl(var(--secondary))",
+                }}
+              ></div>
+            </div>
+            <CardTitle className="truncate">
+              <Link href={`/tag/${props.id}`}>
+                {props.name ?? "Unnamed Tag"}
+              </Link>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 px-3 pb-3 pt-0 text-sm">
+            <p className="text-muted-foreground">
+              {props.description ?? "No description provided."}
+            </p>
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <>
+                    {(props.updatedAt &&
+                      "Updated " + timeSince(props.updatedAt) + " ago") ??
+                      "Created " + timeSince(props.createdAt) + " ago"}
+                  </>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {props.updatedAt?.toISOString() ??
+                      props.createdAt.toISOString()}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              <p>•</p>
+
+              {props.destinationCount != null &&
+                props.destinationCount != undefined && (
+                  <p className="font-muted mr-2 text-sm">
+                    {props.destinationCount} destination
+                    {props.destinationCount == 1 ? null : "s"}
+                  </p>
+                )}
+              <p>•</p>
+
+              {props.listCount != null && props.listCount != undefined && (
+                <p className="font-muted mr-2 text-sm">
+                  {props.listCount} map{props.listCount == 1 ? null : "s"}
+                </p>
+              )}
+              <Link href={`/box/${props.workspace.id}`}>
+                <Badge variant="outline">
+                  {(props.workspace.emoji ?? "❔") + " " + props.workspace.name}
+                </Badge>
+              </Link>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+export function RecentTags({
   workspace,
   user,
   workspaces,
@@ -514,21 +521,21 @@ export function RecentLists({
   const utils = api.useUtils();
 
   const {
-    data: recentLists = { items: [], count: 0 },
+    data: recentTags = { items: [], count: 0 },
     refetch,
     isFetching,
-  } = api.list.getMany.useQuery({
-    limit: 3,
+  } = api.tag.getMany.useQuery({
+    limit: 24,
     order: "DESC",
     sortBy: "updatedAt",
     workspaceId: workspace?.id ?? undefined,
   });
   const [open, setOpen] = useState(false);
 
-  const createList = (callback?: () => void) =>
-    api.list.create.useMutation({
+  const createTag = (callback?: () => void) =>
+    api.tag.create.useMutation({
       onSuccess: async () => {
-        await utils.list.invalidate();
+        await utils.tag.invalidate();
         if (typeof callback === "function") {
           callback();
         }
@@ -536,7 +543,7 @@ export function RecentLists({
       },
       onError: (error) => {
         toast({
-          title: "Failed to create map",
+          title: "Failed to create tag",
           description: error.message,
           variant: "destructive",
         });
@@ -549,28 +556,44 @@ export function RecentLists({
         <Card>
           <CardHeader>
             <CardTitle className="flex flex-row items-center justify-between">
-              <Link href="/search/maps">
+              <Link href="/search/tags">
                 <div className="flex items-center">
-                  <Map className="mr-2 h-5 w-5" /> Recent Maps
+                  <Tags className="mr-2 h-5 w-5" /> Recent Tags
                 </div>
               </Link>
 
-              <Button id="create-map" onClick={() => setOpen(true)} size="sm">
-                <ListPlus />
-                Create Map
+              <Button onClick={() => setOpen(true)} size="sm">
+                <Plus />
+                Create Tag
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 px-6">
-            {recentLists.items.length > 0 ? (
-              recentLists.items.map((lst: List) => {
-                return <ListCard key={lst.id} {...lst} />;
-              })
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                🗺️ No maps found. Try creating one and come back!
-              </p>
-            )}
+          <CardContent className="px-6">
+            <div className="flex flex-row flex-wrap gap-1.5 pb-6">
+              {recentTags.items.length > 0 ? (
+                recentTags.items.map((tg) => {
+                  return (
+                    <Link href={`/tag/${tg.id}`} key={tg.id} className="w-fit">
+                      <Badge
+                        variant="secondary"
+                        style={{
+                          background: tg.color ?? "hsl(var(--secondary))",
+                          color: tg.color
+                            ? getContrastTextColor(tg.color)
+                            : undefined,
+                        }}
+                      >
+                        {tg.name}
+                      </Badge>
+                    </Link>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  🏷 No tags found. Try creating one and come back!
+                </p>
+              )}
+            </div>
             <div className="flex space-x-2">
               <Button
                 size="sm"
@@ -579,7 +602,7 @@ export function RecentLists({
                 asChild
               >
                 <Link
-                  href={`/search/maps${workspace ? "?workspace=" + workspace.id : ""}`}
+                  href={`/search/tags${workspace ? "?workspace=" + workspace.id : ""}`}
                 >
                   <GalleryVerticalEnd />
                   See All
@@ -604,16 +627,16 @@ export function RecentLists({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ListPlus /> Create Map
+            <TagIcon /> Create Tag
           </DialogTitle>
         </DialogHeader>
         <main className="flex flex-1 flex-col space-y-6 pt-0">
-          <ListForm
-            workspace={workspace}
-            user={user}
-            workspaces={workspaces}
+          <TagForm
             update={false}
-            listMutation={createList}
+            tagMutation={createTag}
+            workspaces={workspaces}
+            user={user}
+            workspace={workspace}
           />
         </main>
       </DialogContent>
@@ -621,19 +644,21 @@ export function RecentLists({
   );
 }
 
-export function ListPage(props: { id: string }) {
+export function TagPage(props: { id: string }) {
   const utils = api.useUtils();
 
-  const listId = props.id;
+  const tagId = props.id;
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState<"pins" | "lists">("pins");
+  const [pageNumber, setPageNumber] = useState(1);
 
-  const updateList = (callback?: () => void) =>
-    api.list.update.useMutation({
+  const updateTag = (callback?: () => void) =>
+    api.tag.update.useMutation({
       onSuccess: async () => {
         await utils.list.invalidate();
         toast({
-          title: "Map updated",
-          description: "Successfully updated map properties.",
+          title: "Tag updated",
+          description: "Successfully updated tag properties.",
         });
         if (typeof callback === "function") {
           callback();
@@ -642,30 +667,33 @@ export function ListPage(props: { id: string }) {
       },
       onError: (error) => {
         toast({
-          title: "Failed to update map",
+          title: "Failed to update tag",
           description: error.message,
           variant: "destructive",
         });
       },
     });
-  const favoriteListMutation = updateList();
 
-  const { data }: { data: List | undefined } = api.list.get.useQuery(
-    { id: parseInt(listId ?? "0", 10) },
-    { enabled: !!listId },
+  const { data }: { data: Tag | undefined } = api.tag.get.useQuery(
+    { id: parseInt(tagId ?? "0", 10) },
+    { enabled: !!tagId },
   );
-
-  const [pageNumber, setPageNumber] = useState(1);
 
   const {
     data: searchResults = { count: 0, items: [] },
     refetch,
     isFetching,
-  } = api.destination.getMany.useQuery({
-    lists: [parseInt(listId)],
-    offset: Math.round(pageNumber - 1) * 6,
-    limit: 6,
-  });
+  } = tab == "pins"
+    ? api.destination.getMany.useQuery({
+        tags: [data?.name ?? ""],
+        offset: Math.round(pageNumber - 1) * 6,
+        limit: 6,
+      })
+    : api.list.getMany.useQuery({
+        tags: [data?.name ?? ""],
+        offset: Math.round(pageNumber - 1) * 6,
+        limit: 6,
+      });
 
   function handleOpenChange(openStatus: boolean) {
     setEditing(openStatus);
@@ -677,33 +705,40 @@ export function ListPage(props: { id: string }) {
           <DialogTitle>Edit Map</DialogTitle>
         </DialogHeader>
         {editing && data != undefined ? (
-          <ListForm
+          <TagForm
             update={true}
             defaultValues={
               {
                 name: data.name ?? "",
                 description: data.description ?? "",
-                emoji: data.emoji ?? "🗺️",
-                tags:
-                  data.tags?.map((tag) => ({
-                    id: tag.id.toString(),
-                    text: tag.text,
-                  })) ?? [],
+                color: data.color ?? undefined,
+                shortcut: data.shortcut ?? "",
                 workspaceId: data.workspace.id ?? undefined,
-              } as z.infer<typeof listFormSchema>
+              } as z.infer<typeof tagFormSchema>
             }
             updateId={parseInt(props.id)}
-            listMutation={updateList}
+            tagMutation={(callback) =>
+              updateTag(() => {
+                void utils.tag.get.invalidate({ id: parseInt(props.id) });
+                if (callback) {
+                  callback();
+                }
+              })
+            }
           />
         ) : null}
         <Dialog>
-          <DeleteList id={parseInt(props.id)} routePath="/search/maps">
+          <DeleteTag id={parseInt(props.id)} routePath="/search/maps">
             <DialogTrigger asChild>
-              <Button size="sm" variant="destructive">
-                Burn Map
+              <Button
+                size="sm"
+                variant="destructive"
+                className="flex flex-shrink"
+              >
+                Destroy Tag
               </Button>
             </DialogTrigger>
-          </DeleteList>
+          </DeleteTag>
         </Dialog>
       </DialogContent>
     </Dialog>
@@ -712,85 +747,61 @@ export function ListPage(props: { id: string }) {
       <div className="flex w-full flex-row flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center">
-            <span className="mr-2 text-2xl">{data?.emoji ?? "❔"}</span>
-
-            <h1>{data?.name ?? "Unnamed Map"}</h1>
+            <div
+              className="circle mr-2 flex h-6 w-6 items-center justify-center overflow-hidden rounded-full"
+              style={{ background: data?.color ?? "hsl(var(--secondary))" }}
+            >
+              <div
+                className="circle m-auto h-2.5 w-2.5 overflow-hidden rounded-full"
+                style={{
+                  background:
+                    getContrastTextColor(data?.color ?? "#ffffff") ??
+                    "hsl(var(--secondary))",
+                }}
+              ></div>
+            </div>
+            <h1>{data?.name ?? "Unnamed Tag"}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             {data?.description ?? "No description provided."}
           </p>
         </div>
         <div className="flex flex-row gap-2">
-          {data?.tags ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                if (
-                  data?.tags &&
-                  !!data?.tags.find((t) => t.text == "favorite maps")
-                ) {
-                  favoriteListMutation.mutate({
-                    id: parseInt(props.id),
-                    removedTags: ["favorite maps"],
-                  });
-                } else {
-                  favoriteListMutation.mutate({
-                    id: parseInt(props.id),
-                    newTags: ["favorite maps"],
-                  });
-                }
-              }}
-            >
-              {!!data?.tags.find((t) => t.text == "favorite maps") ? (
-                <>
-                  <StarOff /> Unfavorite Map
-                </>
-              ) : (
-                <>
-                  <Star /> Favorite Map
-                </>
-              )}
-            </Button>
-          ) : null}
           <Button
             size="sm"
             onClick={() => {
               setEditing(true);
             }}
           >
-            <Pencil /> Edit Map
+            <Pencil /> Edit Tag
           </Button>
         </div>
       </div>
-      {data?.tags && data?.tags?.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-2 text-sm">
-          Tags:{" "}
-          {data?.tags.map((tag) => (
-            <Badge key={tag.id} variant="secondary">
-              {tag.text}
-            </Badge>
-          ))}
-        </div>
-      ) : null}
 
       <div className="font-muted flex flex-row space-x-2 text-sm italic">
-        {data?.size && (
+        {data?.listCount ? (
           <div className="flex flex-row space-x-2 pr-2">
             <p className="font-muted text-sm not-italic">
-              {data?.size} destinations{" "}
+              {data?.listCount} map{data?.listCount > 0 ? "s" : null}
             </p>
             <p>•</p>
           </div>
-        )}
+        ) : null}
+        {data?.destinationCount ? (
+          <div className="flex flex-row space-x-2 pr-2">
+            <p className="font-muted text-sm not-italic">
+              {data?.destinationCount} destination
+              {data?.destinationCount > 0 ? "s" : null}
+            </p>
+            <p>•</p>
+          </div>
+        ) : null}
 
         <Tooltip>
           <TooltipTrigger asChild>
             <>
               {(data?.updatedAt &&
-                "Updated " +
-                  timeSince(data?.updatedAt ?? new Date()) +
-                  " ago") ??
+                "Updated " + timeSince(data?.updatedAt) + " ago") ??
                 "Created " + timeSince(data?.createdAt ?? new Date()) + " ago"}
             </>
           </TooltipTrigger>
@@ -801,21 +812,64 @@ export function ListPage(props: { id: string }) {
           </TooltipContent>
         </Tooltip>
       </div>
+      <Separator />
+
+      <Tabs
+        value={tab}
+        onValueChange={(val) => {
+          setTab(val as "pins" | "lists");
+        }}
+        defaultValue="pins"
+        className="w-full"
+      >
+        <TabsList className="h-30 flex w-full flex-row flex-wrap items-center justify-center gap-2 lg:grid lg:grid-cols-2">
+          <TabsTrigger value="pins" className="w-full lg:w-auto">
+            Destinations
+            <Badge variant="secondary" className="ml-2">
+              {data?.destinationCount}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="maps" className="w-full lg:w-auto">
+            Maps
+            <Badge variant="secondary" className="ml-2">
+              {data?.listCount}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {data != undefined ? (
         <div className="block space-y-4">
-          <Separator />
           {searchResults.items.length > 0 ? (
-            searchResults.items.map((dest: Destination) => {
-              return <DestinationCard key={dest.id} {...dest} />;
-            })
+            tab == "pins" ? (
+              searchResults.items.map((dest) => {
+                if (
+                  dest &&
+                  "location" in dest &&
+                  "type" in dest &&
+                  "body" in dest
+                ) {
+                  return (
+                    <DestinationCard key={dest.id} {...(dest as Destination)} />
+                  );
+                }
+                return null;
+              })
+            ) : (
+              searchResults.items.map((lst) => {
+                if (lst && "name" in lst && "description" in lst) {
+                  return <ListCard key={lst.id} {...lst} />;
+                }
+                return null;
+              })
+            )
           ) : isFetching ? (
             <p className="justify-center text-sm text-muted-foreground">
-              🔍 Searching...
+              🔍 Searching {tab == "pins" ? "destinations" : "maps"}...
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              🌌 No destinations found. Try{" "}
+              🌌 No {tab == "pins" ? "destinations" : "maps"} found. Try{" "}
               <Link href="/dashboard">creating one</Link> and come back!
             </p>
           )}
@@ -931,7 +985,7 @@ export function ListPage(props: { id: string }) {
   );
 }
 
-export function DeleteList({
+export function DeleteTag({
   id,
   children,
   routePath,
@@ -944,14 +998,14 @@ export function DeleteList({
 
   const utils = api.useUtils();
 
-  const deleteList = api.list.delete.useMutation({
+  const deleteList = api.tag.delete.useMutation({
     onSuccess: async () => {
-      await utils.list.invalidate();
+      await utils.tag.invalidate();
       router.push(routePath);
     },
     onError: (error) => {
       toast({
-        title: "Failed to delete map",
+        title: "Failed to delete tag",
         description: error.message,
         variant: "destructive",
       });

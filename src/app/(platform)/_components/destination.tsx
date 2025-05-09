@@ -28,8 +28,11 @@ import {
   type Destination,
   type List,
   type updateDestinationSchema,
+  type User,
+  type Workspace,
 } from "~/server/models";
 
+import { timeSince } from "~/lib/utils";
 import { useMediaQuery } from "~/hooks/use-media-query";
 
 import { Badge } from "~/components/ui/badge";
@@ -73,11 +76,18 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { toast } from "~/components/hooks/use-toast";
 import { MinimalTiptapEditor } from "~/components/minimal-tiptap";
 import { createExtensions } from "~/components/minimal-tiptap/hooks/use-minimal-tiptap";
@@ -132,7 +142,13 @@ type DestinationFormProps =
       defaultValues?: z.infer<typeof destinationFormSchema>;
     };
 
-export function DestinationForm(props: DestinationFormProps) {
+export function DestinationForm(
+  props: DestinationFormProps & {
+    workspace?: Workspace;
+    user?: User;
+    workspaces?: Workspace[];
+  },
+) {
   const [loading, setLoading] = useState(false);
   const [loadingUpdate, setLoadingUpdate] = useState(
     props.update ? true : false,
@@ -160,6 +176,11 @@ export function DestinationForm(props: DestinationFormProps) {
     resolver: zodResolver(destinationFormSchema),
     defaultValues: {
       type: "location",
+      workspaceId:
+        props.defaultValues?.workspaceId ??
+        props.workspace?.id ??
+        props.user?.workspaceId ??
+        undefined,
       location: props.defaultValues?.location ?? null,
       name: props.defaultValues?.name ?? "",
       body: props.defaultValues?.body ?? '<p class="text-node"></p>',
@@ -182,10 +203,22 @@ export function DestinationForm(props: DestinationFormProps) {
         body: props.defaultValues?.body ?? '<p class="text-node"></p>',
         tags: props.defaultValues?.tags ?? [],
         attachments: [],
+        workspaceId:
+          props.defaultValues?.workspaceId ??
+          props.workspace?.id ??
+          props.user?.workspaceId ??
+          undefined,
       });
       setTags(props.defaultValues?.tags ?? []);
     }
-  }, [props.defaultValues, form, loadingUpdate, props.update]);
+  }, [
+    props.defaultValues,
+    form,
+    loadingUpdate,
+    props.update,
+    props.workspace,
+    props.user,
+  ]);
   const location = form.watch("location");
   useEffect(() => {
     if (
@@ -231,6 +264,11 @@ export function DestinationForm(props: DestinationFormProps) {
         body: props.defaultValues?.body ?? "",
         tags: props.defaultValues?.tags ?? [],
         attachments: [],
+        workspaceId:
+          props.defaultValues?.workspaceId ??
+          props.workspace?.id ??
+          props.user?.workspaceId ??
+          undefined,
       });
       setTags(props.defaultValues?.tags ?? []);
       setLoading(false);
@@ -242,9 +280,12 @@ export function DestinationForm(props: DestinationFormProps) {
     form,
     props.defaultValues?.body,
     props.defaultValues?.type,
+    props.defaultValues?.workspaceId,
     props.update,
     props.defaultValues?.name,
     props.defaultValues?.tags,
+    props.workspace?.id,
+    props.user?.workspaceId,
   ]);
 
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
@@ -328,7 +369,7 @@ export function DestinationForm(props: DestinationFormProps) {
               />
             </div>
             {destinationTypeForm.watch("type") == "location" ? (
-              <>
+              <div className="flex flex-row items-end gap-2">
                 <div className="min-w-[200px] sm:w-1/2">
                   <FormField
                     control={destinationTypeForm.control}
@@ -363,7 +404,7 @@ export function DestinationForm(props: DestinationFormProps) {
                     <ArrowRight />
                   )}
                 </Button>
-              </>
+              </div>
             ) : null}
           </div>
         </form>
@@ -447,44 +488,84 @@ export function DestinationForm(props: DestinationFormProps) {
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                disabled={
-                  submitMutation.isPending ||
-                  (!form.watch("name") && form.watch("type") === "note") ||
-                  (form.watch("type") === "location" &&
-                    (!form.watch("location") ||
-                      destinationTypeForm.watch("location") !=
-                        form.watch("location")))
-                }
-                size="sm"
-              >
-                {props.update ? (
-                  <>
-                    {submitMutation.isPending ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <Pencil />
-                    )}
+              <div className="flex flex-row items-end justify-end gap-4">
+                <FormField
+                  control={form.control}
+                  name="workspaceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trunk</FormLabel>
 
-                    {submitMutation.isPending
-                      ? "Updating Destination..."
-                      : "Update Destination"}
-                  </>
-                ) : (
-                  <>
-                    {submitMutation.isPending ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <Plus />
-                    )}
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(parseInt(value));
+                        }}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="space-between min-w-[120px]">
+                            <SelectValue placeholder="Trunk" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Trunk</SelectLabel>
 
-                    {submitMutation.isPending
-                      ? "Creating Destination..."
-                      : "Create Destination"}
-                  </>
-                )}
-              </Button>
+                            {props.workspaces?.map((workspace) => {
+                              return (
+                                <SelectItem
+                                  value={workspace.id.toString()}
+                                  key={workspace.id.toString()}
+                                >
+                                  {workspace.name}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={
+                    submitMutation.isPending ||
+                    (!form.watch("name") && form.watch("type") === "note") ||
+                    (form.watch("type") === "location" &&
+                      (!form.watch("location") ||
+                        destinationTypeForm.watch("location") !=
+                          form.watch("location")))
+                  }
+                  size="sm"
+                >
+                  {props.update ? (
+                    <>
+                      {submitMutation.isPending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Pencil />
+                      )}
+
+                      {submitMutation.isPending
+                        ? "Updating Destination..."
+                        : "Update Destination"}
+                    </>
+                  ) : (
+                    <>
+                      {submitMutation.isPending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Plus />
+                      )}
+
+                      {submitMutation.isPending
+                        ? "Creating Destination..."
+                        : "Create Destination"}
+                    </>
+                  )}
+                </Button>
+              </div>
             </>
           ) : null}
         </form>
@@ -493,7 +574,15 @@ export function DestinationForm(props: DestinationFormProps) {
   );
 }
 
-export function CreateDestination() {
+export function CreateDestination({
+  workspace,
+  user,
+  workspaces,
+}: {
+  workspace?: Workspace;
+  user?: User;
+  workspaces?: Workspace[];
+}) {
   const utils = api.useUtils();
   const createDestination = (callback?: () => void) =>
     api.destination.create.useMutation({
@@ -524,6 +613,9 @@ export function CreateDestination() {
           <DestinationForm
             update={false}
             destinationMutation={createDestination}
+            workspace={workspace}
+            user={user}
+            workspaces={workspaces}
           />
         </CardContent>
       </Card>
@@ -534,6 +626,7 @@ export function CreateDestination() {
 export function RecentDestinations({
   dragEnd,
   setDragEnd,
+  workspace,
 }: {
   dragEnd: { over: Over; active: Active } | null;
   setDragEnd: React.Dispatch<
@@ -542,6 +635,7 @@ export function RecentDestinations({
       active: Active;
     } | null>
   >;
+  workspace?: Workspace;
 }) {
   const {
     data: recentDestinations = { items: [], count: 0 },
@@ -550,6 +644,7 @@ export function RecentDestinations({
   } = api.destination.getMany.useQuery({
     limit: 3,
     order: "DESC",
+    workspaceId: workspace?.id ?? undefined,
   });
 
   return (
@@ -582,7 +677,9 @@ export function RecentDestinations({
           )}
           <div className="flex space-x-2">
             <Button size="sm" variant="secondary" disabled={isFetching} asChild>
-              <Link href="/search/pins">
+              <Link
+                href={`/search/pins${workspace ? "?workspace=" + workspace.id : ""}`}
+              >
                 <GalleryVerticalEnd />
                 See All
               </Link>
@@ -661,8 +758,8 @@ export function DestinationCard(
 
   return (
     <Card ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <CardHeader className="px-3 pb-2 pt-4 text-sm">
-        <CardTitle className="truncate">
+      <CardHeader className="px-3 pb-0 pt-4 text-sm">
+        <CardTitle className="truncate leading-snug">
           <Link href={`/pin/${props.id}`}>
             {props.name && props.name.length > 0
               ? props.name
@@ -685,19 +782,29 @@ export function DestinationCard(
             </Button>
           </p>
         ) : null}
-        <DestinationDialogRender data={props} />
-        <div className="mt-2 flex flex-wrap gap-1">
-          <Badge className="mr-2">
+        {props.body &&
+        props.body.length > 0 &&
+        props.body != '<p class="text-node"></p>' ? (
+          <DestinationDialogRender data={props} />
+        ) : null}
+        <div className="mt-2 flex flex-row flex-wrap gap-1.5">
+          <Badge>
             {String(props.type).charAt(0).toUpperCase() +
               String(props.type).slice(1)}
           </Badge>
+
           {props.tags && props.tags?.length > 0
             ? props.tags.map((tag) => (
-                <Link key={tag.id} href={`/search/pins?tags=${tag.text}`}>
+                <Link key={tag.id} href={`/tag/${tag.id}`}>
                   <Badge variant="secondary">{tag.text}</Badge>
                 </Link>
               ))
             : null}
+          <Link href={`/box/${props.workspace.id}`}>
+            <Badge variant="outline">
+              {(props.workspace.emoji ?? "❔") + " " + props.workspace.name}
+            </Badge>
+          </Link>
         </div>
       </CardContent>
     </Card>
@@ -850,13 +957,14 @@ export function DestinationDialog(props: { id: string }) {
                     id: tag.id.toString(),
                     text: tag.text,
                   })) ?? [],
+                workspaceId: data.workspace.id ?? undefined,
               }}
               updateId={parseInt(props.id)}
               destinationMutation={updateDestination}
             />
           ) : (
             <Dialog>
-              <main className="space-y-6 pt-0">
+              <main className="space-y-4 pt-0">
                 {data?.type === "location" ? (
                   <div className="text-sm">
                     Location:{" "}
@@ -867,7 +975,7 @@ export function DestinationDialog(props: { id: string }) {
                     </Button>
                   </div>
                 ) : null}
-                {data?.body ? (
+                {data?.body && data?.body != '<p class="text-node"></p>' ? (
                   <div className="w-full">
                     <DestinationDialogRender
                       data={data?.id !== undefined ? data : undefined}
@@ -884,6 +992,39 @@ export function DestinationDialog(props: { id: string }) {
                     ))}
                   </div>
                 ) : null}
+                <div className="flex flex-row flex-wrap items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-sm">
+                        Created {timeSince(data?.createdAt ?? new Date())} ago
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {data?.updatedAt?.toISOString() ??
+                          data?.createdAt.toISOString()}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <span className="text-muted-foreground">•</span>
+                  {data?.updatedAt ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-sm">
+                          Updated {timeSince(data?.updatedAt)} ago
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {data?.updatedAt?.toISOString() ??
+                            data?.createdAt.toISOString()}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
+                </div>
+
                 <DialogFooter>
                   {data != undefined ? (
                     <div className="w-full">
@@ -908,7 +1049,7 @@ export function DestinationDialog(props: { id: string }) {
                         />
                         <DialogTrigger asChild>
                           <Button size="sm" variant="destructive">
-                            Delete Destination
+                            Destroy Destination
                           </Button>
                         </DialogTrigger>
                       </div>
