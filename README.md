@@ -180,6 +180,9 @@ User Interface
 <li>
 <a href="https://boringavatars.com/">Boring</a> avatars
 </li>
+<li>
+<a href="https://gradient.page/picker">Gradient page</a> color/gradient picker
+</li>
 </ul>
 </details>
 </li>

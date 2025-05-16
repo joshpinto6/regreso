@@ -30,6 +30,7 @@ import {
   lists,
   listTags,
   tags,
+  workspaces,
 } from "~/server/db/schema";
 
 export const destinationRouter = createTRPCRouter({
@@ -50,6 +51,7 @@ export const destinationRouter = createTRPCRouter({
           userId: ctx.user.id,
           name: input.name,
           body: input.body,
+          workspaceId: input.workspaceId ?? ctx.user.workspaceId ?? 0,
           type: input.type,
           location: input.location,
         })
@@ -78,6 +80,7 @@ export const destinationRouter = createTRPCRouter({
             input.tags.map((tag) => {
               return {
                 userId: ctx.user.id,
+                workspaceId: input.workspaceId ?? ctx.user.workspaceId ?? 0,
                 name: tag.text,
                 shortcut: tag.text.toLowerCase().replace(/\s/g, "-"),
               };
@@ -127,9 +130,11 @@ export const destinationRouter = createTRPCRouter({
         const dests = await ctx.db
           .select({
             destination: destinations,
+            workspace: workspaces,
             count: sql<number>`count(*) over()`,
           })
           .from(destinations)
+          .leftJoin(workspaces, eq(destinations.workspaceId, workspaces.id))
           .leftJoin(
             destinationLists,
             listIds.length > 0 || tagNames.length > 0
@@ -187,9 +192,12 @@ export const destinationRouter = createTRPCRouter({
                 ? inArray(destinationLists.listId, listIds)
                 : undefined,
               eq(destinations.userId, ctx.user.id),
+              input.workspaceId
+                ? eq(destinations.workspaceId, input.workspaceId)
+                : undefined,
             ),
           )
-          .groupBy(destinations.id)
+          .groupBy(destinations.id, workspaces.id)
           .having(
             and(
               tagNames.length > 0
@@ -204,12 +212,13 @@ export const destinationRouter = createTRPCRouter({
             ),
           )
           .orderBy(
-            input.order == "ASC"
-              ? asc(destinations[input.sortBy ?? "createdAt"])
-              : desc(destinations[input.sortBy ?? "createdAt"]),
+            (input.order == "ASC" ? asc : desc)(
+              destinations[input.sortBy ?? "createdAt"],
+            ),
           )
           .limit(input.limit)
           .offset(input.offset);
+
         const destTags = await ctx.db
           .select()
           .from(destinationTags)
@@ -222,8 +231,16 @@ export const destinationRouter = createTRPCRouter({
           );
 
         const returnDestinations = dests.map((dest) => {
+          if (!dest.workspace) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Workspace not found for destination.",
+            });
+          }
           const destination = {
             id: dest.destination.id,
+            workspace: dest.workspace,
+            archived: dest.destination.archived,
             userId: dest.destination.userId,
             createdAt: dest.destination.createdAt,
             updatedAt: dest.destination.updatedAt,
@@ -246,6 +263,7 @@ export const destinationRouter = createTRPCRouter({
           };
           return destination;
         });
+
         return {
           items: returnDestinations,
           count:
@@ -275,11 +293,14 @@ export const destinationRouter = createTRPCRouter({
           body: input.body,
           type: input.type,
           location: input.location,
+          workspaceId: input.workspaceId ?? undefined,
+          archived: input.archived ?? false,
         })
         .where(
           and(
             eq(destinations.id, input.id),
             eq(destinations.userId, ctx.user.id),
+            (eq(destinations.archived, false) || input.archived === false),
           ),
         )
         .returning({
@@ -307,6 +328,7 @@ export const destinationRouter = createTRPCRouter({
             input.tags.map((tag) => {
               return {
                 userId: ctx.user.id,
+                workspaceId: input.workspaceId ?? ctx.user.workspaceId ?? 0,
                 name: tag.text,
                 shortcut: tag.text.toLowerCase().replace(/\s/g, "-"),
               };
@@ -375,6 +397,9 @@ export const destinationRouter = createTRPCRouter({
             eq(destinations.id, input.id),
             eq(destinations.userId, ctx.user.id),
           ),
+          with: {
+            workspace: true,
+          },
         });
       if (!dest) {
         throw new TRPCError({
@@ -483,7 +508,10 @@ export const destinationRouter = createTRPCRouter({
       });
 
       if (!destination) {
-        throw new Error("Destination not found or does not belong to the user");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Destination not found or does not belong to the user",
+        });
       }
 
       const validLists = await ctx.db.query.lists.findMany({

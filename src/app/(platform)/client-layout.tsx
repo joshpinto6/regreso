@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, isValidElement, useState } from "react";
+import { isValidElement, useState } from "react";
 import {
   redirect,
   usePathname,
@@ -8,7 +8,15 @@ import {
   useSearchParams,
 } from "next/navigation";
 
-import { ChevronsUpDown, FileQuestion, Home, Map, Search } from "lucide-react";
+import {
+  ChevronsUpDown,
+  FileQuestion,
+  Home,
+  Map,
+  Package2,
+  Search,
+  Tag as TagIcon,
+} from "lucide-react";
 import posthog from "posthog-js";
 import type { User } from "~/server/models";
 
@@ -45,8 +53,8 @@ interface ClientLayoutProps {
 
 export function ClientLayout({ children, user }: ClientLayoutProps) {
   const pathname = usePathname();
-  const platformRoute = pathname.split("/")[1]?.split("/") ?? ["unknown"];
-  const [searchType, setSearchType] = useState(platformRoute[1]);
+  const platformRoute = pathname.split("/") ?? ["unknown"];
+  const [searchType, setSearchType] = useState(platformRoute[2]);
   const router = useRouter();
   const searchParams = useSearchParams();
   if (searchParams.get("loginState") == "signedIn" && user) {
@@ -81,24 +89,56 @@ export function ClientLayout({ children, user }: ClientLayoutProps) {
     {
       render: (
         <BreadcrumbItem>
+          <TagIcon size="16" />
+          <BreadcrumbLink href="/search/tags">Tags</BreadcrumbLink>
+        </BreadcrumbItem>
+      ),
+      name: "Tag",
+      route: "tag",
+    },
+    {
+      render: (
+        <BreadcrumbItem>
+          <Package2 size="16" />
+          <BreadcrumbLink href="/search/boxes">Trunks</BreadcrumbLink>
+        </BreadcrumbItem>
+      ),
+      name: "Workspace",
+      route: "box",
+    },
+    {
+      render: (
+        <BreadcrumbItem>
           <Search size="16" />
-          {platformRoute[0] == "search" ? (
+          {platformRoute[1] == "search" ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="ml-2 flex items-center gap-1">
-                {searchType == "maps" ? "Map" : "Destination"}
+                {searchType == "maps"
+                  ? "Map"
+                  : searchType == "tags"
+                    ? "Tag"
+                    : searchType == "boxes"
+                      ? "Trunk"
+                      : "Destination"}
                 <ChevronsUpDown size="16" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>Search Type</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
-                  value={platformRoute[1]}
+                  value={platformRoute[2]}
                   onValueChange={selectSearchType}
                 >
-                  <DropdownMenuRadioItem value="pins" className="pl-3">
+                  <DropdownMenuRadioItem value="pins">
                     Destination
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="maps" className="pl-3">
+                  <DropdownMenuRadioItem value="maps">
                     Map
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="tags">
+                    Tag
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="boxes">
+                    Trunk
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -133,7 +173,7 @@ export function ClientLayout({ children, user }: ClientLayoutProps) {
                     <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden lg:block" />
-                  {platformPages.find((item) => item.route == platformRoute[0]!)
+                  {platformPages.find((item) => item.route == platformRoute[1]!)
                     ?.render ?? (
                     <BreadcrumbItem>
                       <BreadcrumbLink
@@ -153,11 +193,7 @@ export function ClientLayout({ children, user }: ClientLayoutProps) {
 
           <div className="h-[calc(100vh-3.5rem)] overflow-auto">
             {children && isValidElement(children) ? (
-              cloneElement(children, { params: { user } } as {
-                params: {
-                  user: User;
-                };
-              })
+              children
             ) : (
               <p>
                 🌌 Nothing to display on the dashboard right now. Try selecting

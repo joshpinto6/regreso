@@ -30,6 +30,16 @@ export const users = createTable(
     recoveryCode: varchar("recovery_code").notNull(),
     avatarUrl: text("avatar_url"),
     bio: text("bio").default("Pelicans are epic"),
+    workspaceId: integer("workspace_id")
+      .references(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (): any => workspaces.id,
+        {
+          onDelete: "set default",
+          onUpdate: "cascade",
+        },
+      )
+      .default(0),
   },
   (user) => ({
     emailIndex: index("email_index").on(user.email),
@@ -63,7 +73,9 @@ export const emailVerificationRequests = createTable(
     id: text("id").primaryKey(),
     userId: integer("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
     code: text("code").notNull(),
     email: text("email").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
@@ -74,7 +86,9 @@ export const passwordResetSessions = createTable("password_reset_session", {
   id: text("id").primaryKey(),
   userId: integer("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
   code: text("code").notNull(),
   email: text("email").notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -87,7 +101,9 @@ export const totpCredentials = createTable("totp_credential", {
   userId: integer("user_id")
     .notNull()
     .unique()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
   key: text("key").notNull(),
 });
 
@@ -95,7 +111,9 @@ export const passkeyCredentials = createTable("passkey_credential", {
   id: text("id").notNull().primaryKey(),
   userId: integer("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
   name: text("name").notNull(),
   algorithm: integer("algorithm").notNull(),
   publicKey: text("public_key").notNull(),
@@ -105,7 +123,9 @@ export const securityKeyCredentials = createTable("security_key_credential", {
   id: text("id").notNull().primaryKey(),
   userId: integer("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
   name: text("name").notNull(),
   algorithm: integer("algorithm").notNull(),
   publicKey: text("public_key").notNull(),
@@ -116,12 +136,14 @@ export const destinations = createTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 256 }),
-    location: varchar("location", { length: 256 }).unique(),
+    location: varchar("location", { length: 256 }),
     type: varchar("type", { length: 256 }).notNull(),
     body: text("body"),
     userId: integer("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -129,7 +151,12 @@ export const destinations = createTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
       .$onUpdate(() => new Date()),
-    workspaceId: integer("workspace_id").references(() => users.id),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    archived: boolean("archived").default(false).notNull(),
   },
   (destination) => ({
     searchIndex: index("destination_search_index").using(
@@ -137,6 +164,7 @@ export const destinations = createTable(
       sql`setweight(to_tsvector('english', ${destination.name}), 'A') ||
           setweight(to_tsvector('english', ${destination.body}), 'B')`,
     ),
+    uniqueLocation: unique().on(destination.userId, destination.location),
   }),
 );
 
@@ -148,7 +176,24 @@ export const tags = createTable(
     name: varchar("name", { length: 256 }).notNull(),
     userId: integer("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+      .$onUpdate(() => new Date()),
+    description: varchar("description", { length: 256 }),
+    color: varchar("color", { length: 256 }),
+    archived: boolean("archived").default(false).notNull(),
   },
   (tag) => ({
     searchIndex: index("tag_search_index").using(
@@ -196,7 +241,12 @@ export const lists = createTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    workspaceId: integer("workspace_id").references(() => users.id),
+    workspaceId: integer("workspace_id")
+      .references(() => workspaces.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    archived: boolean("archived").default(false).notNull(),
   },
   (list) => ({
     uniqueListName: unique().on(list.userId, list.name),
@@ -254,12 +304,24 @@ export const workspaces = createTable(
     name: varchar("name", { length: 256 }).notNull(),
     description: varchar("description", { length: 256 }),
     emoji: varchar("emoji", { length: 256 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
     userId: integer("user_id")
-      .notNull()
-      .references(() => users.id),
+      .references(() => users.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      })
+      .notNull(),
+    archived: boolean("archived").default(false).notNull(),
   },
   (workspace) => ({
     uniqueWorkspaceName: unique().on(workspace.userId, workspace.name),
+    searchIndex: index("workspace_searc_index").using(
+      "gin",
+      sql`setweight(to_tsvector('english', ${workspace.name}), 'A') ||
+            setweight(to_tsvector('english', ${workspace.description}), 'B')`,
+    ),
   }),
 );
 
@@ -329,6 +391,10 @@ export const tagsRelations = relations(tags, ({ one, many }) => ({
     fields: [tags.userId],
     references: [users.id],
   }),
+  workspace: one(workspaces, {
+    fields: [tags.workspaceId],
+    references: [workspaces.id],
+  }),
   destinationTags: many(destinationTags),
   listTags: many(listTags),
 }));
@@ -340,6 +406,10 @@ export const destinationsRelations = relations(
       fields: [destinations.userId],
       references: [users.id],
     }),
+    workspace: one(workspaces, {
+      fields: [destinations.workspaceId],
+      references: [workspaces.id],
+    }),
     destinationTags: many(destinationTags),
   }),
 );
@@ -350,6 +420,10 @@ export const listsRelations = relations(lists, ({ one, many }) => ({
   user: one(users, {
     fields: [lists.userId],
     references: [users.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [lists.workspaceId],
+    references: [workspaces.id],
   }),
 }));
 
