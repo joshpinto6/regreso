@@ -85,7 +85,7 @@ export default function ProfileEdit(props: { user: User }) {
   }, [pfpClearState]);
 
   return (
-    <div className="max-w-2/3 space-y-6 overflow-y-scroll px-3">
+    <div className="max-w-2/3 space-y-6 overflow-y-scroll px-3 pb-4">
       <Form {...form}>
         <div className="space-y-2">
           <FormItem className="w-full">
