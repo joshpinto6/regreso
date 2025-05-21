@@ -71,7 +71,7 @@
     "@trpc/react-query": "^11.0.4",
     "@trpc/server": "^11.0.2",
     "@uploadthing/react": "^7.3.1",
-    "arctic": "^3.6.1",
+    "arctic": "^3.7.0",
     "boring-avatars": "^1.11.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
