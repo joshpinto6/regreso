@@ -60,7 +60,7 @@
     "@tiptap/extension-horizontal-rule": "^2.22.0",
     "@tiptap/extension-image": "^2.22.0",
     "@tiptap/extension-link": "^2.22.0",
-    "@tiptap/extension-placeholder": "^2.14.0",
+    "@tiptap/extension-placeholder": "^2.22.0",
     "@tiptap/extension-text-style": "^2.14.0",
     "@tiptap/extension-typography": "^2.14.0",
     "@tiptap/extension-underline": "^2.22.0",
