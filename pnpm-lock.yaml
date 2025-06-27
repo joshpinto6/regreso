@@ -106,7 +106,7 @@ importers:
         version: 2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/extension-code-block@2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/pm@2.22.0))(@tiptap/pm@2.22.0)(highlight.js@11.11.1)(lowlight@3.3.0)
       '@tiptap/extension-color':
         specifier: ^2.22.0
-        version: 2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/extension-text-style@2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0)))
+        version: 2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/extension-text-style@2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0)))
       '@tiptap/extension-heading':
         specifier: ^2.23.0
         version: 2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
@@ -123,8 +123,8 @@ importers:
         specifier: ^2.23.0
         version: 2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/pm@2.22.0)
       '@tiptap/extension-text-style':
-        specifier: ^2.22.3
-        version: 2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
+        specifier: ^2.23.0
+        version: 2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
       '@tiptap/extension-typography':
         specifier: ^2.14.0
         version: 2.14.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
@@ -2543,8 +2543,8 @@ packages:
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
-  '@tiptap/extension-text-style@2.22.3':
-    resolution: {integrity: sha512-M3FLOUPcO8fR+rM97mR2gQ54KFkdlAUQtEPKQpO1f312gtcVdBNxgq0WgqTnBY7thWLyqQSKiAsL6y88+JddSA==}
+  '@tiptap/extension-text-style@2.23.0':
+    resolution: {integrity: sha512-SFSKm0fHgBiJHwv8nZFeNToBqTDWxuTBr1vWHu/QKmP4H3D8xKRJZlCJ4zrtTEhMyKSLmFxG41fuC0r233SE3Q==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
@@ -7857,10 +7857,10 @@ snapshots:
     dependencies:
       '@tiptap/core': 2.22.0(@tiptap/pm@2.22.0)
 
-  '@tiptap/extension-color@2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/extension-text-style@2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0)))':
+  '@tiptap/extension-color@2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))(@tiptap/extension-text-style@2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0)))':
     dependencies:
       '@tiptap/core': 2.22.0(@tiptap/pm@2.22.0)
-      '@tiptap/extension-text-style': 2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
+      '@tiptap/extension-text-style': 2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
 
   '@tiptap/extension-document@2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))':
     dependencies:
@@ -7935,7 +7935,7 @@ snapshots:
     dependencies:
       '@tiptap/core': 2.22.0(@tiptap/pm@2.22.0)
 
-  '@tiptap/extension-text-style@2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))':
+  '@tiptap/extension-text-style@2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))':
     dependencies:
       '@tiptap/core': 2.22.0(@tiptap/pm@2.22.0)
 
@@ -8005,7 +8005,7 @@ snapshots:
       '@tiptap/extension-paragraph': 2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
       '@tiptap/extension-strike': 2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
       '@tiptap/extension-text': 2.22.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
-      '@tiptap/extension-text-style': 2.22.3(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
+      '@tiptap/extension-text-style': 2.23.0(@tiptap/core@2.22.0(@tiptap/pm@2.22.0))
       '@tiptap/pm': 2.22.0
 
   '@trpc/client@11.0.4(@trpc/server@11.0.4(typescript@5.8.3))(typescript@5.8.3)':
