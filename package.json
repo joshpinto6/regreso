@@ -103,7 +103,7 @@
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "superjson": "^2.2.1",
-    "tailwind-merge": "^2.5.5",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "trpc-to-openapi": "^2.1.5",
     "uploadthing": "^7.7.3",
