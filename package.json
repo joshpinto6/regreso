@@ -64,7 +64,7 @@
     "@tiptap/extension-text-style": "^2.22.3",
     "@tiptap/extension-typography": "^2.14.0",
     "@tiptap/extension-underline": "^2.23.0",
-    "@tiptap/pm": "^2.22.0",
+    "@tiptap/pm": "^2.26.1",
     "@tiptap/react": "^2.22.0",
     "@tiptap/starter-kit": "^2.22.0",
     "@trpc/client": "^11.0.2",
