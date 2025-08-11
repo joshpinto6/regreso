@@ -62,7 +62,7 @@
     "@tiptap/extension-link": "^2.22.0",
     "@tiptap/extension-placeholder": "^2.23.0",
     "@tiptap/extension-text-style": "^2.22.3",
-    "@tiptap/extension-typography": "^2.14.0",
+    "@tiptap/extension-typography": "^2.26.0",
     "@tiptap/extension-underline": "^2.23.0",
     "@tiptap/pm": "^2.22.0",
     "@tiptap/react": "^2.22.0",
