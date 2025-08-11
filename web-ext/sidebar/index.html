@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Regreso</title>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <div id="login" style="display: none">
+      <p>It appears you are not authenticated. You can either:</p>
+      <p>Log into Regreso (required for SSO Auth).</p>
+      <div style="display: flex">
+        <a href="https://regreso.netlify.app/log-in"
+          ><button>Launch Regreso</button></a
+        >
+        <button id="refresh-auth">Refresh Status</button>
+      </div>
+      <p>Log into Extension with:</p>
+      <div style="display: flex">
+        <button id="login-btn">Email+Password</button>
+        <button id="login-btn">Session Token</button>
+      </div>
+    </div>
+    <div id="destinations" style="display: none">
+      <p>Recent Destinations:</p>
+      <button id="refresh-destinations">Refresh</button>
+    </div>
+    <div id="login-status" style="display: none">
+      <p>Logged in as:</p>
+      <div style="display: flex">
+        <p id="user-displayName" style="margin-right: 8px"></p>
+        <p id="user-name"></p>
+      </div>
+      <button id="logout-btn">Log out</button>
+    </div>
+
+    <template id="destination-template">
+      <div class="destination">
+        <div style="display: flex">
+          <p class="name"></p>
+        </div>
+        <a class="location"></a>
+
+        <div class="tags" sty*le="display: flex"></div>
+      </div>
+    </template>
+    <template id="tag-template">
+      <div class="tag"></div>
+    </template>
+
+    <script src="./index.js"></script>
+  </body>
+</html>

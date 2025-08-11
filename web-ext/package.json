@@ -1,0 +1,26 @@
+{
+  "name": "regreso-ext",
+  "version": "0.1.0",
+  "description": "Save links and resources to Regreso with a single click (or keyboard shortcut)!",
+  "scripts": {
+    "gen:firefox": "run-script-os",
+    "gen:firefox:linux": "cp manifest_v2.json manifest.json",
+    "gen:firefox:windows": "copy manifest_v2.json manifest.json",
+    "gen:firefox:default": "cp manifest_v2.json manifest.json",
+    "dev:firefox": "web-ext run --devtools",
+    "build": "web-ext build --verbose",
+    "lint": "web-ext lint"
+  },
+  "keywords": [
+    "bookmarking",
+    "extension",
+    "regreso"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "run-script-os": "^1.1.6",
+    "web-ext": "^8.3.0",
+    "webextension-polyfill": "^0.12.0"
+  }
+}

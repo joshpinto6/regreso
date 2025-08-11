@@ -110,19 +110,29 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
-  const user = await createUser(
-    email,
-    displayName,
-    crypto.randomBytes(8).toString("hex"),
-    null,
-    null,
-    githubUserId,
-  );
-  const sessionToken = generateSessionToken();
-  const session = await createSession(sessionToken, user.id, {
-    twoFactorVerified: false,
-  });
-  void setSessionTokenCookie(sessionToken, session.expiresAt);
+  try {
+    const user = await createUser(
+      email,
+      displayName,
+      crypto.randomBytes(8).toString("hex"),
+      null,
+      null,
+      githubUserId,
+    );
+    const sessionToken = generateSessionToken();
+    const session = await createSession(sessionToken, user.id, {
+      twoFactorVerified: false,
+    });
+    void setSessionTokenCookie(sessionToken, session.expiresAt);
+  } catch (error) {
+    return new Response(
+      "An error occurred. Hint: This may mean that a user with this email already exists.",
+      {
+        status: 500,
+      },
+    );
+  }
+
   return new Response(null, {
     status: 302,
     headers: {

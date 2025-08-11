@@ -33,4 +33,4 @@ rules:
     - drizzleObjectName:
         - "db"
         - "ctx.db"
-ignorePatterns: ["src/components/minimal-tiptap/**/*"]
+ignorePatterns: ["src/components/minimal-tiptap/**/*", "web-ext/**/*"]

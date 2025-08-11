@@ -1,0 +1,68 @@
+{
+  "manifest_version": 2,
+  "name": "Regreso",
+  "version": "0.1.0",
+  "description": "Save links and resources to Regreso with a single click (or keyboard shortcut)!",
+  "icons": {
+    "48": "assets/icon.svg",
+    "96": "assets/icon.svg"
+  },
+  "homepage_url": "https://regreso.netlify.app",
+  "permissions": [
+    "<all_urls>",
+    "activeTab",
+    "tabs",
+    "storage",
+    "cookies",
+    "https://regreso.netlify.app/*"
+  ],
+  "optional_permissions": ["bookmarks", "browsingData"],
+  "commands": {
+    "_add_site": {
+      "suggested_key": {
+        "default": "Ctrl+Space",
+        "mac": "MacCtrl+Space"
+      },
+      "description": "Save site with Regreso"
+    }
+  },
+  "sidebar_action": {
+    "default_title": "Regreso",
+    "default_panel": "sidebar/index.html",
+    "default_icon": "assets/icon.svg",
+    "browser_style": true
+  },
+  "browser_action": {
+    "browser_style": true,
+    "default_icon": "assets/icon.svg",
+    "default_title": "Regreso",
+    "default_popup": "popup/index.html",
+    "default_area": "navbar",
+    "theme_icons": [
+      {
+        "light": "assets/icon.svg",
+        "dark": "assets/icon.svg",
+        "size": 32
+      }
+    ]
+  },
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "assets/save.svg",
+    "default_title": "Save site with Regreso",
+    "default_popup": "popup/save.html",
+    "pinned": false,
+    "show_matches": ["*://*/*"]
+  },
+  "background": {
+    "scripts": [
+      "node_modules/webextension-polyfill/dist/browser-polyfill.js",
+      "background/script.js"
+    ]
+  },
+  "web_accessible_resources": ["/assets/icon.svg"],
+  "options_ui": {
+    "page": "option/indexs.html",
+    "browser_style": true
+  }
+}
